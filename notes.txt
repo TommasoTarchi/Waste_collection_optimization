@@ -4,3 +4,5 @@
 - Far notare nella presentazione che si è usato l'algoritmo di Dijkstra.
 - Far notare nella resentazione che mancano i parametri ul e uu nelle descrizioni
   del paper.
+- Far notare nella presentazione che si sono considerati distinti (i,j) e (j,i),
+  anche con la possibilità di avere costi e demand diversi.

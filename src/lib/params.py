@@ -1,6 +1,8 @@
 import json
 import numpy as np
 
+from .objectives import update_service_time, update_capacity
+
 
 def check_params(params):
     """
@@ -171,6 +173,9 @@ class Solution:
         service_times = np.zeros(params.num_vehicles)
         capacities = np.full(params.num_vehicles, params.W)
 
+        # init initial positions
+        initial_positions = np.full(params.num_vehicles, 0)
+
         # select random vehicle
         current_vehicle = np.random.randint(params.num_vehicles)
 
@@ -183,12 +188,23 @@ class Solution:
             candidate_positions = np.where(d_temp > 0)[0]
             next_position = candidate_positions[np.argmin(params.c[current_position, candidate_positions])]
 
-            # if resources available update position, otherwise change vehicle
-            ...
-            if ... :
-                # update service times
+            # compute service time for possible next position
+            next_service_time = update_service_time(service_times[current_vehicle],
+                                                    params.d[current_position, next_position],
+                                                    params.t[current_position, next_position],
+                                                    params.ul,
+                                                    params.uu)
+            next_service_time_tot = next_service_time + params.t[next_position, params.num_nodes-1]  # add time to go to disposal site
+            next_service_time_tot += params.t[params.num_nodes-1, 0]  # add time to go back to depot
 
-                # update capacities
+            # compute remaining capacity for possible next position
+            next_capacity = update_capacity(...)
+
+            # if resources available update position, otherwise change vehicle
+            if next_service_time_tot < params.T_max and next_capacity >= 0:
+                # update service time and capacity
+                service_times[current_vehicle] = next_service_time
+                capacities[current_vehicle] = next_capacity
 
                 # update demand
                 d_temp[current_position, next_position] = 0
@@ -196,9 +212,14 @@ class Solution:
                 # update position
                 current_position = next_position
 
+                # update number of covered edges
+                num_covered_edges += 1
+
             else ... :
                 # update service times
 
                 # update capacities
 
-                # select random vehicle to continue
+                # if available keep old vehicle, otherwise select new one
+
+                # update position accordingly to previous row

@@ -1,0 +1,6 @@
+- Valutare se convenga metter la seconda parte dei vettori soluzione uguale ai
+  numeri "giusti" e poi aggiungere padding di -1, oppure se convenga ripetere
+  i numeri "giusti" tante volte quanti sono gli edge percorsi da quel veicolo.
+- Far notare nella presentazione che si è usato l'algoritmo di Dijkstra.
+- Far notare nella resentazione che mancano i parametri ul e uu nelle descrizioni
+  del paper.

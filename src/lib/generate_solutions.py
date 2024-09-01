@@ -1,16 +1,19 @@
 from .params import Params, Solution
 
 
-def generate_initial_solutions(params: Params) -> Solution:
+def generate_initial_solutions(params: Params, num_periods: int) -> Solution:
     """
     Generate initial solution to the problem according to first heuristic
-    for a single period.
+    for a certain number of periods.
     """
 
-    # Generate random first part
-    solution = Solution()
+    # check if number of periods is valid
+    assert num_periods > 0, "Number of periods must be greater than 0."
 
-    # compute second part with heuristic
-    solution.init_heuristic(params)
+    solutions_heuristic = []
 
-    return solution
+    # generate solutions for each period with heuristic
+    for _ in range(num_periods):
+        solution = Solution()
+        solution.init_heuristic(params)
+        solutions_heuristic.append(solution)

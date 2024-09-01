@@ -215,7 +215,8 @@ class Solution:
             next_service_time_tot += params.t[params.num_nodes-1, 0]  # add time to go back to depot
 
             # compute remaining capacity for possible next position
-            next_capacity = update_capacity(capacities[current_vehicle], params.d[next_start, next_end])
+            next_capacity = update_capacity(capacities[current_vehicle],
+                                            params.d[next_start, next_end])
 
             # serve next required edge with current vehicle
             if next_service_time_tot < params.T_max and next_capacity >= 0:

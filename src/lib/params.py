@@ -1,7 +1,7 @@
 import json
 import numpy as np
 
-from .objectives import update_service_time, update_capacity
+from .objectives import compute_service_time, update_capacity
 
 
 def check_params(params):
@@ -15,7 +15,7 @@ def check_params(params):
     assert params.cv.shape == (params.num_vehicles), "Shape of cv not coherent with problem size."
     assert params.G.shape == (params.num_nodes, params.num_nodes), "Shape of G not coherent with problem size."
     assert np.sum(params.d > 0) == params.num_required_edges, "Number of d > 0 not coherent with problem size."
-    #assert params.required_edges_idx.shape[0] == params.num_required_edges, "Number of required edges not coherent with problem size."
+    assert len(params.required_edges) == params.num_required_edges, "Number of required edges not coherent with problem size."
 
     # check demand is non-negative
     assert np.all(params.d >= 0), "Demand d must be non-negative."
@@ -30,7 +30,8 @@ class Params:
         # size of the problem
         self.num_nodes = 0  # number of nodes
         self.num_edges = 0  # number of edges
-        self.num_required_edges = 0  # number of required edges
+        self.num_required_edges = 0  # number of required edges (if (i,j) and (j,i) are
+                                     # required, only one is counted)
         self.num_vehicles = 0  # number of vehicles
         self.num_periods = 0  # number of planning periods
 
@@ -48,8 +49,8 @@ class Params:
         self.ul = 0  # conversion factor of demand to loading time
         self.uu = 0  # conversion factor of demand to unloading time
 
-        # required edges indices
-        #self.required_edges_idx = None
+        # required edges coordinates (i is staring point and j is ending point)
+        self.required_edges = None
 
     def load_from_dir(self, data_path):
         # define paths to init data
@@ -85,13 +86,13 @@ class Params:
         # compute total number of edges
         self.num_edges = self.num_nodes * self.num_nodes
 
-        # compute required edges indices
-        #required_edges_idx = []
-        #for i in range(self.num_nodes):
-        #    for j in range(self.num_nodes):
-        #        if self.d[i, j] > 0:
-        #            required_edges_idx.append(i * self.num_nodes + j)
-        #self.required_edges_idx = np.array(required_edges_idx)
+        # compute required edges coordinates
+        required_coord = []
+        for i in range(self.num_nodes):
+            for j in range(i+1, self.num_nodes):
+                if self.d[i, j] > 0:
+                    required_coord.append((i, j))
+        self.required_edges = required_coord
 
         # check coherence of parameters
         check_params(self)
@@ -138,6 +139,9 @@ class Solution:
     def __init__(self):
         self.first_part = None
         self.second_part = None
+        self.service_times = None
+        self.total_service_time = None
+        self.total_travelled_distance = None
 
     def set_first_part(self, first_part: np.ndarray):
         assert len(first_part.shape) == 1, "First part must be a 1D vector."
@@ -173,53 +177,106 @@ class Solution:
         service_times = np.zeros(params.num_vehicles)
         capacities = np.full(params.num_vehicles, params.W)
 
-        # init initial positions
-        initial_positions = np.full(params.num_vehicles, 0)
+        # init travelled distance
+        travelled_distance = 0
 
-        # select random vehicle
+        # init vehicle positions
+        positions = np.full(params.num_vehicles, 0)
+
+        # init available vehicles
+        available_vehicles = np.full(params.num_vehicles, True)
+
+        # select random vehicle and mark as not available
         current_vehicle = np.random.randint(params.num_vehicles)
+        available_vehicles[current_vehicle] = False
 
         # iterate until all required edges are covered
-        d_temp = np.copy(params.d)
-        num_covered_edges = 0
-        current_position = 0
-        while num_covered_edges < params.num_required_edges:
-            # select required edge with minimum distance from current position
-            candidate_positions = np.where(d_temp > 0)[0]
-            next_position = candidate_positions[np.argmin(params.c[current_position, candidate_positions])]
+        d_temp = params.d.copy()
+        required_edges_temp = params.required_edges.copy()
+        solution_idx = 0  # index of the current element of the solution
+        while required_edges_temp:
+            # select current position
+            current_position = positions[current_vehicle]
+
+            # find closest starting node of a required edge to current position
+            candidate_next_starts = np.where(np.any(d_temp > 0, axis=1))[0]
+            next_start = candidate_next_starts[np.argmin(params.c[current_position, candidate_next_starts])]
+
+            # choose ending node of required edge at random
+            next_end = np.random.choice(np.nonzero(next_start)[0])
 
             # compute service time for possible next position
-            next_service_time = update_service_time(service_times[current_vehicle],
-                                                    params.d[current_position, next_position],
-                                                    params.t[current_position, next_position],
-                                                    params.ul,
-                                                    params.uu)
-            next_service_time_tot = next_service_time + params.t[next_position, params.num_nodes-1]  # add time to go to disposal site
+            next_service_time = params.c[current_position, next_start]  # time to go to required edge
+            next_service_time += compute_service_time(params.d[next_start, next_end],
+                                                      params.t[next_start, next_end],
+                                                      params.ul,
+                                                      params.uu)  # add time for service of required edge
+            next_service_time_tot = params.t[next_end, params.num_nodes-1]  # add time to go to disposal site
             next_service_time_tot += params.t[params.num_nodes-1, 0]  # add time to go back to depot
 
             # compute remaining capacity for possible next position
-            next_capacity = update_capacity(...)
+            next_capacity = update_capacity(capacities[current_vehicle], params.d[next_start, next_end])
 
-            # if resources available update position, otherwise change vehicle
+            # serve next required edge with current vehicle
             if next_service_time_tot < params.T_max and next_capacity >= 0:
                 # update service time and capacity
                 service_times[current_vehicle] = next_service_time
                 capacities[current_vehicle] = next_capacity
 
                 # update demand
-                d_temp[current_position, next_position] = 0
+                d_temp[next_start, next_end] = 0
 
                 # update position
-                current_position = next_position
+                positions[current_vehicle] = next_end
 
-                # update number of covered edges
-                num_covered_edges += 1
+                # update travelled distance
+                travelled_distance += params.c[current_position, next_start] + params.c[next_start, next_end]
 
-            else ... :
-                # update service times
+                # update required edges (symmetrically)
+                if next_end < next_start:
+                    next_start, next_end = next_end, next_start
+                required_edges_temp.remove((next_start, next_end))
 
-                # update capacities
+                # update elements of the solution
+                self.first_part[solution_idx] = params.required_edges.index((next_start, next_end))
+                self.second_part[solution_idx] = current_vehicle
+                solution_idx += 1
 
-                # if available keep old vehicle, otherwise select new one
+            # go to disposal site
+            elif current_position != params.num_nodes-1:
+                # update service time and capacity
+                service_times[current_vehicle] = params.t[current_position, params.num_nodes-1]
+                capacities[current_vehicle] = params.W
 
-                # update position accordingly to previous row
+                # update position
+                positions[current_vehicle] = params.num_nodes-1
+
+                # update travelled distance
+                travelled_distance += params.t[current_position, params.num_nodes-1]
+
+            # go back to depot
+            else:
+                # update service time
+                service_times[current_vehicle] = params.t[params.num_nodes-1, 0]
+
+                # update position
+                positions[current_vehicle] = 0
+
+                # update travelled distance
+                travelled_distance += params.t[params.num_nodes-1, 0]
+
+                # select new vehicle among the available ones
+                current_vehicle = np.random.choice(np.where(available_vehicles)[0])
+                available_vehicles[current_vehicle] = False
+
+        # move all vehicles to depot and update service times
+        for vehicle in range(params.num_vehicles):
+            if positions[vehicle] != 0:
+                service_times[vehicle] += params.t[positions[vehicle], params.num_nodes-1] + params.t[params.num_nodes-1, 0]
+
+        # save service times
+        self.service_times = service_times
+        self.total_service_time = np.sum(service_times)
+
+        # save total travelled distance
+        self.total_travelled_distance = travelled_distance

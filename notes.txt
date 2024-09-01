@@ -1,6 +1,12 @@
-- Valutare se convenga metter la seconda parte dei vettori soluzione uguale ai
-  numeri "giusti" e poi aggiungere padding di -1, oppure se convenga ripetere
-  i numeri "giusti" tante volte quanti sono gli edge percorsi da quel veicolo.
+- Far notare nella presentazione come si è modificata la rappresentazione delle
+  soluzioni.
 - Far notare nella presentazione che si è usato l'algoritmo di Dijkstra.
-- Far notare nella resentazione che mancano i parametri ul e uu nelle descrizioni
+- Far notare nella presentazione che mancano i parametri ul e uu nelle descrizioni
   del paper.
+- Far notare nella presentazione come si sono aggiustate le soluzioni prodotte
+  come "vicine" di quelle prodotte dall'euristica.
+- Far notare quanto scarsa sia la descrizione dei metodi nel paper; quindi non siamo
+  sicuri di aver implementato esattamente lo stesso algoritmo degli autori.
+- Far notare che si è usato un vettore soluzione per ogni periodo.
+
+- Rinominare Solution() in SinglePeriodSolution().

@@ -5,7 +5,7 @@ from .params import ProblemParams, SinglePeriodSolution
 
 def generate_heuristic_solution(params: ProblemParams) -> list:
     """
-    Generate an initial solutions to the problem according to the first heuristic
+    Generate a (single) initial solution to the problem according to the first heuristic
     in the paper.
     """
     solution_heuristic = []
@@ -73,15 +73,16 @@ def MOSA(initial_solution: list,
          alpha: float = 0.9,
          K: float = 70.0) -> list:
     """
-    Apply Multi-Objective Simulated Annealing (MOSA) to an initial solution.
+    Apply Multi-Objective Simulated Annealing (MOSA) to a (single) initial solution.
     """
     T = T_0
     current_solution = initial_solution
 
     # compute objective functions for the current solution
-    current_objective_functions = [0, 0, 0, 0]
+    current_objective_functions = np.array([0, 0, 0, 0])
     for period_solution in current_solution:
-        current_objective_functions += period_solution.compute_objective_functions(params)
+        period_solution.compute_objective_functions(params)
+        current_objective_functions += period_solution.objectives
 
     n_iter = 0  # number of iterations
     non_improving_iter = 0  # number of non-improving iterations
@@ -124,9 +125,10 @@ def MOSA(initial_solution: list,
                 ngbr_solution[period].adjust_first_part(params)
 
         # compute objective functions for the neighbor solution
-        ngbr_objective_functions = [0, 0, 0, 0]
+        ngbr_objective_functions = np.array([0, 0, 0, 0])
         for period_solution in ngbr_solution:
-            ngbr_objective_functions += period_solution.compute_objective_functions(params)
+            period_solution.compute_objective_functions(params)
+            ngbr_objective_functions += period_solution.objectives
 
         # increase number of non-improving iterations
         non_improving_iter += 1

@@ -2,9 +2,9 @@ import json
 import numpy as np
 
 
-def check_params(params):
+def check_ProblemParams(params):
     """
-    Check if the parameters are coherent.
+    Check if the problem parameters are coherent.
     """
     # check the size of arrays
     assert params.c.shape == (params.num_nodes, params.num_nodes), "Shape of c not coherent with problem size."
@@ -15,6 +15,26 @@ def check_params(params):
 
     # check demand is non-negative
     assert np.all(params.d >= 0), "Demand d must be non-negative."
+
+
+def check_SolverParams(params):
+    """
+    Check if the solver parameters are coherent.
+    """
+    # check ranges of parameters
+    assert params.N_0 > 0, "Initial number of solutions must be positive."
+    assert params.MOSA_T_0 > 0, "Initial temperature must be positive."
+    assert params.MOSA_max_iter > 0, "Maximum number of iterations for MOSA must be positive."
+    assert params.MOSA_max_non_improving_iter > 0, "Maximum number of non-improving iterations for MOSA must be positive."
+    assert 0 < params.MOSA_alpha < 1, "Cooling factor must be between 0 and 1."
+    assert params.MOSA_K > 0, "Boltzman constant must be positive."
+    assert params.MOIWOA_S_min > 0, "Minimum number of children seeds must be positive."
+    assert params.MOIWOA_S_max > 0, "Maximum number of children seeds must be positive."
+    assert params.MOIWOA_N_max > 0, "Maximum number of solutions must be positive."
+    assert params.MOIWOA_max_iter > 0, "Maximum number of iterations for MOIWOA must be positive."
+
+    # check S_min is less than S_max
+    assert params.MOIWOA_S_min < params.MOIWOA_S_max, "Minimum number of children seeds must be less than maximum number."
 
 
 def compute_service_time(edge_demand, edge_traversing_time, ul, uu):
@@ -37,7 +57,7 @@ def update_capacity(current_capacity, edge_demand):
 
 class ProblemParams:
     """
-    Class to store parameters of the problem (except for demand).
+    Class to store parameters of the problem.
     """
 
     def __init__(self):
@@ -115,7 +135,7 @@ class ProblemParams:
         self.periods_employed = np.zeros(self.num_vehicles)
 
         # check coherence of parameters
-        check_params(self)
+        check_ProblemParams(self)
 
     def save_to_dir(self, data_path):
         # define paths to init data
@@ -150,6 +170,70 @@ class ProblemParams:
         np.save(G_path, self.G)
 
 
+class SolverParams:
+    """
+    Class to store parameters of the solver.
+    """
+
+    def __init__(self):
+        # initialize default values
+        self.N_0: int = 10  # initial number of solutions
+        self.MOSA_T_0: float = 800.0  # initial temperature
+        self.MOSA_max_iter: int = 200  # maximum number of iterations
+        self.MOSA_max_non_improving_iter: int = 10  # maximum number of non-improving iterations
+        self.MOSA_alpha: float = 0.9  # cooling factor
+        self.MOSA_K: float = 70.0  # Boltzman constant for acceptance probability
+        self.MOIWOA_S_min: float = 9.0  # minimum number of children seeds
+        self.MOIWOA_S_max: float = 200.0  # maximum number of children seeds
+        self.MOIWOA_N_max: int = 100  # maximum number of solutions
+        self.MOIWOA_max_iter: int = 300  # maximum number of iterations
+
+    def load_from_dir(self, params_path):
+        # load parameters from json
+        with open(params_path) as f:
+            params = json.load(f)
+            if params['N_0'] is not None:
+                self.N_0 = params['N_0']
+            if params['MOSA_T_0'] is not None:
+                self.MOSA_T_0 = params['MOSA_T_0']
+            if params['MOSA_max_iter'] is not None:
+                self.MOSA_max_iter = params['MOSA_max_iter']
+            if params['MOSA_max_non_improving_iter'] is not None:
+                self.MOSA_max_non_improving_iter = params['MOSA_max_non_improving_iter']
+            if params['MOSA_alpha'] is not None:
+                self.MOSA_alpha = params['MOSA_alpha']
+            if params['MOSA_K'] is not None:
+                self.MOSA_K = params['MOSA_K']
+            if params['MOIWOA_S_min'] is not None:
+                self.MOIWOA_S_min = params['MOIWOA_S_min']
+            if params['MOIWOA_S_max'] is not None:
+                self.MOIWOA_S_max = params['MOIWOA_S_max']
+            if params['MOIWOA_N_max'] is not None:
+                self.MOIWOA_N_max = params['MOIWOA_N_max']
+            if params['MOIWOA_max_iter'] is not None:
+                self.MOIWOA_max_iter = params['MOIWOA_max_iter']
+
+        # check coherence of parameters
+        check_SolverParams(self)
+
+    def save_to_dir(self, params_path):
+        # save scalar parameters to json
+        with open(params_path, 'w') as f:
+            params = {
+                'N_0': self.N_0,
+                'MOSA_T_0': self.MOSA_T_0,
+                'MOSA_max_iter': self.MOSA_max_iter,
+                'MOSA_max_non_improving_iter': self.MOSA_max_non_improving_iter,
+                'MOSA_alpha': self.MOSA_alpha,
+                'MOSA_K': self.MOSA_K,
+                'MOIWOA_S_min': self.MOIWOA_S_min,
+                'MOIWOA_S_max': self.MOIWOA_S_max,
+                'MOIWOA_N_max': self.MOIWOA_N_max,
+                'MOIWOA_max_iter': self.MOIWOA_max_iter
+            }
+            json.dump(params, f)
+
+
 class SinglePeriodSolution:
     """
     Class to store solution of the problem (for a single period) in vector
@@ -164,6 +248,7 @@ class SinglePeriodSolution:
         self.traversals = None  # number of traversals of each edge
         self.total_travelled_distance = None
         self.vehicle_employed = None  # whether each vehicle was employed in this period
+        self.objectives = None  # (partial) objective functions
 
     def set_first_part(self, first_part: np.ndarray):
         """
@@ -318,16 +403,16 @@ class SinglePeriodSolution:
         """
         Compute the objective functions of the solution.
         """
+        self.objectives = np.zeros(4)
+
         # compute total waste collection routing cost
-        Z_1 = params.theta * self.total_travelled_distance + params.cv.dot(self.vehicle_employed)
+        self.objectives[0] = params.theta * self.total_travelled_distance + params.cv.dot(self.vehicle_employed)
 
         # compute total pollution routing cost
-        Z_2 = np.sum(params.G * self.traversals)
+        self.objectives[1] = np.sum(params.G * self.traversals)
 
-        # compute total amount of hired labor
-        Z_3 = params.sigma * np.sum(self.vehicle_employed)
+        # compute total amount of hired labor (actually we change sign for minimization)
+        self.objectives[2] = -params.sigma * np.sum(self.vehicle_employed)
 
         # compute total work deviation
-        Z_4 = np.sum(1 - self.total_service_time / params.T_max)
-
-        return Z_1, Z_2, Z_3, Z_4
+        self.objectives[3] = np.sum(1 - self.total_service_time / params.T_max)

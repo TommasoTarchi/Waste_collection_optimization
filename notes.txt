@@ -19,3 +19,10 @@
   acceptance probability a seconda dell'importanza delle priorità degli obiettivi.
 - Eventualmente aggiungere altri stopping criteria.
 - Far notare che si sono aggiunti stopping criteria (citare paper da cui si sono presi).
+- Far notare che si è usato deap per il non-dominated sorting.
+- Valutare se esistano modi più efficienti per fare il non-dominated sorting (magari
+  tenendo in considerazione il sorting fatto al passo precedente).
+- Far notare che non si è usato gurobi.
+
+- Creare nuova classe SolverParameters che contenga tutti i parametri del solver. Fare
+  in modo che se un parametro non è specificato, venga preso il valore di default.

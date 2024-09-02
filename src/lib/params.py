@@ -21,7 +21,6 @@ def compute_service_time(edge_demand, edge_traversing_time, ul, uu):
     """
     Compute the service time of a vehicle for a given edge traversed.
     """
-
     service_time = edge_demand * (ul + uu) + edge_traversing_time
 
     return service_time
@@ -31,13 +30,12 @@ def update_capacity(current_capacity, edge_demand):
     """
     Update the capacity of a vehicle based on last edge traversed.
     """
-
     new_capacity = current_capacity - edge_demand
 
     return new_capacity
 
 
-class Params:
+class ProblemParams:
     """
     Class to store parameters of the problem (except for demand).
     """
@@ -168,6 +166,9 @@ class SinglePeriodSolution:
         self.vehicle_employed = None  # whether each vehicle was employed in this period
 
     def set_first_part(self, first_part: np.ndarray):
+        """
+        Set the first part of the solution to a given vector.
+        """
         assert len(first_part.shape) == 1, "First part must be a 1D vector."
         if self.second_part is not None:
             assert first_part.shape[0] == self.second_part.shape[0], "First part must have the same size as the second part."
@@ -176,6 +177,9 @@ class SinglePeriodSolution:
         self.first_part = first_part
 
     def set_second_part(self, second_part: np.ndarray):
+        """
+        Set the second part of the solution to a given vector.
+        """
         assert len(second_part.shape) == 1, "Second part must be a 1D vector."
         if self.first_part is not None:
             assert second_part.shape[0] == self.first_part.shape[0], "Second part must have the same size as the first part."
@@ -183,49 +187,50 @@ class SinglePeriodSolution:
         # set second part of the solution to a given vector
         self.second_part = second_part
 
-    def adjust_first_part(self, params: Params):
+    def adjust_first_part(self, params: ProblemParams):
+        """
+        Adjust the first part of the solution to satisfy constraints.
+        """
         # check coherence
         assert self.second_part is not None, "Second part must be set before the first part is adjusted."
 
         # compute first part
         # TODO
 
-    def adjust_second_part(self, params: Params):
+    def adjust_second_part(self, params: ProblemParams):
+        """
+        Adjust the second part of the solution to satisfy constraints.
+        """
         # check coherence
         assert self.first_part is not None, "First part must be set before the second part is adjusted."
 
         # compute second part
         # TODO
 
-    def init_heuristic(self, params: Params):
+    def init_heuristic(self, params: ProblemParams):
+        """
+        Initialize the solution with a heuristic.
+        """
         # compute number of required edges for this period
         num_required_edges = np.sum(params.d > 0)
 
-        # init first and second part
+        # initialize first and second part
         self.first_part = np.full(num_required_edges, -1)
         self.second_part = np.full(num_required_edges, -1)
 
-        # init service times and capacities
+        # initialize auxiliary variables
         service_times = np.zeros(params.num_vehicles)
         capacities = np.full(params.num_vehicles, params.W)
-
-        # init traversals
-        traversals = np.zeros_like(params.c)
-
-        # init travelled distance
-        travelled_distance = 0
-
-        # init vehicle positions
-        positions = np.full(params.num_vehicles, 0)
-
-        # init available vehicles
+        traversals = np.zeros_like(params.c)  # number of traversals of each edge
+        travelled_distance = 0  # total travelled distance
+        positions = np.full(params.num_vehicles, 0)  # current position of each vehicle
         available_vehicles = np.full(params.num_vehicles, True)
 
         # select random vehicle and mark as not available
         current_vehicle = np.random.randint(params.num_vehicles)
         available_vehicles[current_vehicle] = False
 
-        # init vehicle employment
+        # initialize vehicle employment
         self.vehicle_employed = np.full(params.num_vehicles, False)
 
         # iterate until all required edges are covered
@@ -240,7 +245,7 @@ class SinglePeriodSolution:
             candidate_next_starts = np.where(np.any(d_temp > 0, axis=1))[0]
             next_start = candidate_next_starts[np.argmin(params.c[current_position, candidate_next_starts])]
 
-            # choose ending node of required edge at random
+            # choose ending node of required edge at random among non-zero demand edges
             next_end = np.random.choice(np.nonzero(next_start)[0])
 
             # compute service time for possible next position
@@ -253,25 +258,16 @@ class SinglePeriodSolution:
             next_service_time_tot += params.t[params.num_nodes-1, 0]  # add time to go back to depot
 
             # compute remaining capacity for possible next position
-            next_capacity = update_capacity(capacities[current_vehicle],
-                                            params.d[next_start, next_end])
+            next_capacity = update_capacity(capacities[current_vehicle], params.d[next_start, next_end])
 
             # serve next required edge with current vehicle
             if next_service_time_tot < params.T_max and next_capacity >= 0:
-                # update service time and capacity
+                # update
                 service_times[current_vehicle] = next_service_time
                 capacities[current_vehicle] = next_capacity
-
-                # update demand
                 d_temp[next_start, next_end] = 0
-
-                # update position
                 positions[current_vehicle] = next_end
-
-                # update traversals
                 traversals[next_start, next_end] += 1
-
-                # update travelled distance
                 travelled_distance += params.c[current_position, next_start] + params.c[next_start, next_end]
 
                 # update required edges (symmetrically)
@@ -289,31 +285,19 @@ class SinglePeriodSolution:
 
             # go to disposal site
             elif current_position != params.num_nodes-1:
-                # update service time and capacity
+                # update
                 service_times[current_vehicle] = params.t[current_position, params.num_nodes-1]
                 capacities[current_vehicle] = params.W
-
-                # update position
                 positions[current_vehicle] = params.num_nodes-1
-
-                # update traversals
                 traversals[current_position, params.num_nodes-1] += 1
-
-                # update travelled distance
                 travelled_distance += params.t[current_position, params.num_nodes-1]
 
             # go back to depot
             else:
-                # update service time
+                # update
                 service_times[current_vehicle] = params.t[params.num_nodes-1, 0]
-
-                # update position
                 positions[current_vehicle] = 0
-
-                # update traversals
                 traversals[params.num_nodes-1, 0] += 1
-
-                # update travelled distance
                 travelled_distance += params.t[params.num_nodes-1, 0]
 
                 # select new vehicle among the available ones
@@ -325,16 +309,15 @@ class SinglePeriodSolution:
             if positions[vehicle] != 0:
                 service_times[vehicle] += params.t[positions[vehicle], params.num_nodes-1] + params.t[params.num_nodes-1, 0]
 
-        # save total service time
+        # save supplementary data
         self.total_service_time = np.sum(service_times)
-
-        # save traversals
         self.traversals = traversals
-
-        # save total travelled distance
         self.total_travelled_distance = travelled_distance
 
-    def compute_objectives(self, params: Params):
+    def compute_objectives(self, params: ProblemParams):
+        """
+        Compute the objective functions of the solution.
+        """
         # compute total waste collection routing cost
         Z_1 = params.theta * self.total_travelled_distance + params.cv.dot(self.vehicle_employed)
 

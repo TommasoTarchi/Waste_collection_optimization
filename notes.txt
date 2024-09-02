@@ -1,12 +1,21 @@
-- Far notare nella presentazione come si è modificata la rappresentazione delle
-  soluzioni.
-- Far notare nella presentazione che si è usato l'algoritmo di Dijkstra.
-- Far notare nella presentazione che mancano i parametri ul e uu nelle descrizioni
-  del paper.
-- Far notare nella presentazione come si sono aggiustate le soluzioni prodotte
-  come "vicine" di quelle prodotte dall'euristica.
+- Far notare che mancano i parametri ul e uu nelle descrizioni del paper.
+- Far notare come si sono aggiustate le soluzioni prodotte come "vicine" di quelle
+  prodotte dall'euristica.
 - Far notare quanto scarsa sia la descrizione dei metodi nel paper; quindi non siamo
   sicuri di aver implementato esattamente lo stesso algoritmo degli autori.
-- Far notare che si è usato un vettore soluzione per ogni periodo.
-
-- Rinominare Solution() in SinglePeriodSolution().
+  Per esempio:
+  1. Non è chiaro come aggiustare le soluzioni dopo essere state perturbate in MOSA.
+  2. Non è chiaro come si debba fare l'annealing della temperatura.
+  3. Non è chiaro se in MOSA le perturbazioni debbano essere fatte globalmente su
+     tutti periodi contemporaneamente o separatamente su ogni periodo.
+  4. Non è specificata la probabilità usata in MOSA per l'accettazione delle soluzioni
+     non dominanti.
+- Far notare che si è usato un vettore soluzione per ogni periodo e che si è usata
+  una seconda parte della soluzione di lunghezza uguale alla prima.
+- Far notare che si è usata geometric cooling strategy e ... acceptance probability come
+  descritte nel paper salvato in docs/ (quello di Nam e Park non era disponibile).
+  Citare il paper.
+- Valutare se pesare la somma delle differenze tra objective functions nel calcolo della
+  acceptance probability a seconda dell'importanza delle priorità degli obiettivi.
+- Eventualmente aggiungere altri stopping criteria.
+- Far notare che si sono aggiunti stopping criteria (citare paper da cui si sono presi).

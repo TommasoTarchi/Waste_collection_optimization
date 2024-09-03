@@ -272,7 +272,7 @@ class SinglePeriodSolution:
         # set second part of the solution to a given vector
         self.second_part = second_part
 
-    def adjust_first_part(self, params: ProblemParams):
+    def adjust_first_part(self, problem_params: ProblemParams):
         """
         Adjust the first part of the solution to satisfy constraints.
         """
@@ -282,7 +282,7 @@ class SinglePeriodSolution:
         # compute first part
         # TODO
 
-    def adjust_second_part(self, params: ProblemParams):
+    def adjust_second_part(self, problem_params: ProblemParams):
         """
         Adjust the second part of the solution to satisfy constraints.
         """
@@ -292,35 +292,35 @@ class SinglePeriodSolution:
         # compute second part
         # TODO
 
-    def init_heuristic(self, params: ProblemParams):
+    def init_heuristic(self, problem_params: ProblemParams):
         """
         Initialize the solution with a heuristic.
         """
         # compute number of required edges for this period
-        num_required_edges = np.sum(params.d > 0)
+        num_required_edges = np.sum(problem_params.d > 0)
 
         # initialize first and second part
         self.first_part = np.full(num_required_edges, -1)
         self.second_part = np.full(num_required_edges, -1)
 
         # initialize auxiliary variables
-        service_times = np.zeros(params.num_vehicles)
-        capacities = np.full(params.num_vehicles, params.W)
-        traversals = np.zeros_like(params.c)  # number of traversals of each edge
+        service_times = np.zeros(problem_params.num_vehicles)
+        capacities = np.full(problem_params.num_vehicles, problem_params.W)
+        traversals = np.zeros_like(problem_params.c)  # number of traversals of each edge
         travelled_distance = 0  # total travelled distance
-        positions = np.full(params.num_vehicles, 0)  # current position of each vehicle
-        available_vehicles = np.full(params.num_vehicles, True)
+        positions = np.full(problem_params.num_vehicles, 0)  # current position of each vehicle
+        available_vehicles = np.full(problem_params.num_vehicles, True)
 
         # select random vehicle and mark as not available
-        current_vehicle = np.random.randint(params.num_vehicles)
+        current_vehicle = np.random.randint(problem_params.num_vehicles)
         available_vehicles[current_vehicle] = False
 
         # initialize vehicle employment
-        self.vehicle_employed = np.full(params.num_vehicles, False)
+        self.vehicle_employed = np.full(problem_params.num_vehicles, False)
 
         # iterate until all required edges are covered
-        d_temp = params.d[:, :, self.period].copy()
-        required_edges_temp = params.required_edges.copy()
+        d_temp = problem_params.d[:, :, self.period].copy()
+        required_edges_temp = problem_params.required_edges.copy()
         solution_idx = 0  # index of the current element of the solution
         while required_edges_temp:
             # select current position
@@ -328,32 +328,32 @@ class SinglePeriodSolution:
 
             # find closest starting node of a required edge to current position
             candidate_next_starts = np.where(np.any(d_temp > 0, axis=1))[0]
-            next_start = candidate_next_starts[np.argmin(params.c[current_position, candidate_next_starts])]
+            next_start = candidate_next_starts[np.argmin(problem_params.c[current_position, candidate_next_starts])]
 
             # choose ending node of required edge at random among non-zero demand edges
             next_end = np.random.choice(np.nonzero(next_start)[0])
 
             # compute service time for possible next position
-            next_service_time = params.c[current_position, next_start]  # time to go to required edge
-            next_service_time += compute_service_time(params.d[next_start, next_end],
-                                                      params.t[next_start, next_end],
-                                                      params.ul,
-                                                      params.uu)  # add time for service of required edge
-            next_service_time_tot = params.t[next_end, params.num_nodes-1]  # add time to go to disposal site
-            next_service_time_tot += params.t[params.num_nodes-1, 0]  # add time to go back to depot
+            next_service_time = problem_params.c[current_position, next_start]  # time to go to required edge
+            next_service_time += compute_service_time(problem_params.d[next_start, next_end],
+                                                      problem_params.t[next_start, next_end],
+                                                      problem_params.ul,
+                                                      problem_params.uu)  # add time for service of required edge
+            next_service_time_tot = problem_params.t[next_end, problem_params.num_nodes-1]  # add time to go to disposal site
+            next_service_time_tot += problem_params.t[problem_params.num_nodes-1, 0]  # add time to go back to depot
 
             # compute remaining capacity for possible next position
-            next_capacity = update_capacity(capacities[current_vehicle], params.d[next_start, next_end])
+            next_capacity = update_capacity(capacities[current_vehicle], problem_params.d[next_start, next_end])
 
             # serve next required edge with current vehicle
-            if next_service_time_tot < params.T_max and next_capacity >= 0:
+            if next_service_time_tot < problem_params.T_max and next_capacity >= 0:
                 # update
                 service_times[current_vehicle] = next_service_time
                 capacities[current_vehicle] = next_capacity
                 d_temp[next_start, next_end] = 0
                 positions[current_vehicle] = next_end
                 traversals[next_start, next_end] += 1
-                travelled_distance += params.c[current_position, next_start] + params.c[next_start, next_end]
+                travelled_distance += problem_params.c[current_position, next_start] + problem_params.c[next_start, next_end]
 
                 # update required edges (symmetrically)
                 if next_end < next_start:
@@ -361,7 +361,7 @@ class SinglePeriodSolution:
                 required_edges_temp.remove((next_start, next_end))
 
                 # update elements of the solution
-                self.first_part[solution_idx] = params.required_edges.index((next_start, next_end))
+                self.first_part[solution_idx] = problem_params.required_edges.index((next_start, next_end))
                 self.second_part[solution_idx] = current_vehicle
                 solution_idx += 1
 
@@ -369,50 +369,50 @@ class SinglePeriodSolution:
                 self.vehicle_employed[current_vehicle] = True
 
             # go to disposal site
-            elif current_position != params.num_nodes-1:
+            elif current_position != problem_params.num_nodes-1:
                 # update
-                service_times[current_vehicle] = params.t[current_position, params.num_nodes-1]
-                capacities[current_vehicle] = params.W
-                positions[current_vehicle] = params.num_nodes-1
-                traversals[current_position, params.num_nodes-1] += 1
-                travelled_distance += params.t[current_position, params.num_nodes-1]
+                service_times[current_vehicle] = problem_params.t[current_position, problem_params.num_nodes-1]
+                capacities[current_vehicle] = problem_params.W
+                positions[current_vehicle] = problem_params.num_nodes-1
+                traversals[current_position, problem_params.num_nodes-1] += 1
+                travelled_distance += problem_params.t[current_position, problem_params.num_nodes-1]
 
             # go back to depot
             else:
                 # update
-                service_times[current_vehicle] = params.t[params.num_nodes-1, 0]
+                service_times[current_vehicle] = problem_params.t[problem_params.num_nodes-1, 0]
                 positions[current_vehicle] = 0
-                traversals[params.num_nodes-1, 0] += 1
-                travelled_distance += params.t[params.num_nodes-1, 0]
+                traversals[problem_params.num_nodes-1, 0] += 1
+                travelled_distance += problem_params.t[problem_params.num_nodes-1, 0]
 
                 # select new vehicle among the available ones
                 current_vehicle = np.random.choice(np.where(available_vehicles)[0])
                 available_vehicles[current_vehicle] = False
 
         # move all vehicles to depot and update service times
-        for vehicle in range(params.num_vehicles):
+        for vehicle in range(problem_params.num_vehicles):
             if positions[vehicle] != 0:
-                service_times[vehicle] += params.t[positions[vehicle], params.num_nodes-1] + params.t[params.num_nodes-1, 0]
+                service_times[vehicle] += problem_params.t[positions[vehicle], problem_params.num_nodes-1] + problem_params.t[problem_params.num_nodes-1, 0]
 
         # save supplementary data
         self.total_service_time = np.sum(service_times)
         self.traversals = traversals
         self.total_travelled_distance = travelled_distance
 
-    def compute_objectives(self, params: ProblemParams):
+    def compute_objectives(self, problem_params: ProblemParams):
         """
         Compute the objective functions of the solution.
         """
         self.objectives = np.zeros(4)
 
         # compute total waste collection routing cost
-        self.objectives[0] = params.theta * self.total_travelled_distance + params.cv.dot(self.vehicle_employed)
+        self.objectives[0] = problem_params.theta * self.total_travelled_distance + problem_params.cv.dot(self.vehicle_employed)
 
         # compute total pollution routing cost
-        self.objectives[1] = np.sum(params.G * self.traversals)
+        self.objectives[1] = np.sum(problem_params.G * self.traversals)
 
         # compute total amount of hired labor (actually we change sign for minimization)
-        self.objectives[2] = -params.sigma * np.sum(self.vehicle_employed)
+        self.objectives[2] = -problem_params.sigma * np.sum(self.vehicle_employed)
 
         # compute total work deviation
-        self.objectives[3] = np.sum(1 - self.total_service_time / params.T_max)
+        self.objectives[3] = np.sum(1 - self.total_service_time / problem_params.T_max)

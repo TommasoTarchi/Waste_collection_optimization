@@ -1,15 +1,18 @@
+import numpy as np
 from deap.tools import sortNondominated
 
 from .params import ProblemParams, SolverParams
 from .generate_solutions import generate_heuristic_solution, MOSA
 
 
-def compute_fitness() -> float:
+def compute_fitness(objectives: np.ndarray, avg_objectives: np.ndarray) -> np.float64:
     """
     Compute the fitness value of a solution.
     """
-    # TODO
-    pass
+    fitness = 0.0
+    fitness = np.sum(objectives / avg_objectives) / objectives.shape[0]
+
+    return fitness
 
 
 def compute_n_seeds(fitness: float, min_fitness: float, max_fitness: float, S_min: float, S_max: float) -> int:
@@ -21,18 +24,20 @@ def compute_n_seeds(fitness: float, min_fitness: float, max_fitness: float, S_mi
     return round(S)
 
 
+def compute_crowding_distance() -> list:
+    pass
+
+
 def sort_nondominated(objective_values: list) -> list:
     """
     Sort the seed population with non-dominated sorting.
     """
-    sorted_seeds = []
-
-    # TODO (use deap.tools.sortNondominated)
 
     return sorted_seeds
 
 
 def MOIWOA(initial_seeds: list,
+           problem_params: ProblemParams,
            S_min: float = 9.0,
            S_max: float = 200.0,
            N_max: int = 100,
@@ -42,36 +47,72 @@ def MOIWOA(initial_seeds: list,
     initial solutions.
     """
     current_seeds = initial_seeds
-
-    # compute fitness values
+    current_objectives_values = []
     current_fitness_values = []
+
+    # compute objectives values for initial seeds
     for seed in current_seeds:
-        current_fitness_values.append(compute_fitness())
+        seed_objectives = np.zeros(4)
+        for period_solution in seed:
+            period_solution.compute_objectives(problem_params)
+            seed_objectives += period_solution.objectives
+        current_objectives_values.append(seed_objectives)
+    avg_objectives = np.zeros(4)
+    for objectives in current_objectives_values:
+        avg_objectives += objectives
+    avg_objectives /= len(current_objectives_values)  # for standardization
+
+    # compute fitness values for initial seeds
+    for seed_objectives in current_objectives_values:
+        current_fitness_values.append(compute_fitness(seed_objectives, avg_objectives))
     min_fitness = min(current_fitness_values)
     max_fitness = max(current_fitness_values)
 
     n_iter = 0
     while n_iter < max_iter:
 
-        # compute children seeds
+        # compute average objective values on current seeds (for standardization)
+        avg_objectives = np.zeros(4)
+        for objectives in current_objectives_values:
+            avg_objectives += objectives
+        avg_objectives /= len(current_objectives_values)
+
+        # generate children seeds
         new_seeds = []
-        new_fitness_values = []
         for seed, fitness in zip(current_seeds, current_fitness_values):
             n_children = compute_n_seeds(fitness, min_fitness, max_fitness, S_min, S_max)
 
             # TODO: distribute children seeds and add them to new_seeds,
-            #       also compute their fitness values and add them to new_fitness_values
+
+        # compute objectives and fitness values for children seeds
+        new_fitness_values = []
+        new_objectives_values = []
+        for seed in new_seeds:
+            seed_objectives = np.zeros(4)
+            for period_solution in seed:
+                period_solution.compute_objectives(problem_params)
+                seed_objectives += period_solution.objectives
+            new_objectives_values.append(seed_objectives)
+            new_fitness_values.append(compute_fitness(seed_objectives, avg_objectives))
 
         # add children seeds to solutions
         current_seeds += new_seeds
+        current_objectives_values += new_objectives_values
         current_fitness_values += new_fitness_values
 
         # truncate seed population if larger than upper limit
         if len(current_seeds) > N_max:
+            # apply non-dominated sorting
             sorted_seeds_idx = sort_nondominated(current_fitness_values)
 
-            # TODO: remove seeds accordingly
-            pass
+            # truncate seed population
+            current_seeds = [current_seeds[i] for i in sorted_seeds_idx[:N_max]]
+            current_objectives_values = [current_objectives_values[i] for i in sorted_seeds_idx[:N_max]]
+            current_fitness_values = [current_fitness_values[i] for i in sorted_seeds_idx[:N_max]]
+
+        # compute min and max fitness values
+        min_fitness = min(current_fitness_values)
+        max_fitness = max(current_fitness_values)
 
         n_iter += 1
 
@@ -123,6 +164,7 @@ class MosaMoiwoaSolver:
         assert self.MOSA_solutions is not None, "Before applying MOIWOA MOSA must be applied."
 
         self.final_solutions = MOIWOA(self.MOSA_solutions,
+                                      self.problem_params,
                                       self.solver_params.MOIWOA_S_min,
                                       self.solver_params.MOIWOA_S_max,
                                       self.solver_params.MOIWOA_N_max,

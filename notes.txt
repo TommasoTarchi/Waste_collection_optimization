@@ -10,19 +10,34 @@
      tutti periodi contemporaneamente o separatamente su ogni periodo.
   4. Non è specificata la probabilità usata in MOSA per l'accettazione delle soluzioni
      non dominanti.
+  5. Non è chiaro come si debba calcolare la fitness in MOIWOA.
+  6. Non è chiaro come si debba ordinare le soluzioni con stesso grado di ottimalità
+     in MOIWOA.
 - Far notare che si è usato un vettore soluzione per ogni periodo e che si è usata
   una seconda parte della soluzione di lunghezza uguale alla prima.
 - Far notare che si è usata geometric cooling strategy e ... acceptance probability come
   descritte nel paper salvato in docs/ (quello di Nam e Park non era disponibile).
   Citare il paper.
 - Valutare se pesare la somma delle differenze tra objective functions nel calcolo della
-  acceptance probability a seconda dell'importanza delle priorità degli obiettivi.
+  acceptance probability e nel calcolo della fitness a seconda dell'importanza delle priorità
+  degli obiettivi.
 - Eventualmente aggiungere altri stopping criteria.
 - Far notare che si sono aggiunti stopping criteria (citare paper da cui si sono presi).
 - Far notare che si è usato deap per il non-dominated sorting.
 - Valutare se esistano modi più efficienti per fare il non-dominated sorting (magari
   tenendo in considerazione il sorting fatto al passo precedente).
 - Far notare che non si è usato gurobi.
+- Far notare come si è calcolata la fitness (con standardizzazione).
+- Far notare come si sono ordinate le soluzioni con stesso grado di ottimalità in MOIWOA.
+- Far notare che, anche se il fatto di far riprodurre le soluzioni in base alla fitness può
+  favorire soluzioni non dominanti, il troncamento delle soluzioni in base all dominanza
+  corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
+  ecceda in numero massimo.
+- Valutare se cambiare in metodo di calcolo della fitness.
+- Aggiungere README.
+- Aggiungere requirements.
+- Aggiungere LICENSE.
+- Citare deap (se usata).
 
-- Creare nuova classe SolverParameters che contenga tutti i parametri del solver. Fare
-  in modo che se un parametro non è specificato, venga preso il valore di default.
+- Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
+  le objective functions del primo e del secondo o del secondo e del primo.

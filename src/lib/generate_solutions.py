@@ -3,7 +3,7 @@ import numpy as np
 from .params import ProblemParams, SinglePeriodSolution
 
 
-def generate_heuristic_solution(params: ProblemParams) -> list:
+def generate_heuristic_solution(problem_params: ProblemParams) -> list:
     """
     Generate a (single) initial solution to the problem according to the first heuristic
     in the paper.
@@ -11,53 +11,50 @@ def generate_heuristic_solution(params: ProblemParams) -> list:
     solution_heuristic = []
 
     # generate solutions for each period with heuristic
-    for period in range(params.num_periods):
+    for period in range(problem_params.num_periods):
         solution = SinglePeriodSolution(period)
-        solution.init_heuristic(params)
+        solution.init_heuristic(problem_params)
         solution_heuristic.append(solution)
 
     return solution_heuristic
 
 
-def dominates(objective_functions_1: list, objective_functions_2: list) -> bool:
+def dominates(target_objective: np.ndarray, comparison_objective: np.ndarray) -> bool:
     """
-    Check if objective_functions_1 dominates objective_functions_2.
+    Check if the target solution dominates the comparison solution.
     """
-    assert len(objective_functions_1) == len(objective_functions_2), "Objective functions must have the same length."
+    assert target_objective.shape == comparison_objective.shape, "Objective functions must have the same shape."
 
-    for i in range(len(objective_functions_1)):
-        if objective_functions_1[i] < objective_functions_2[i]:
-            return False
-
-    for i in range(len(objective_functions_1)):
-        if objective_functions_1[i] > objective_functions_2[i]:
+    if np.all(target_objective >= comparison_objective):
+        if np.any(target_objective > comparison_objective):
             return True
 
     return False
 
 
-def geometric_cooling(T_old: float, alpha: float) -> float:
+
+def geometric_cooling(T: float, alpha: float) -> float:
     """
     Apply geometric cooling to the temperature.
     """
+    assert T > 0, "Temperature must be positive."
     assert 0 < alpha < 1, "Alpha must be between 0 and 1."
 
-    T_new = alpha * T_old
+    T_new = alpha * T
 
     return T_new
 
 
-def acceptance_probability(current_objective_functions: list, ngbr_objective_functions: list, T: float, K: float) -> float:
+def acceptance_probability(current_objective_functions: np.ndarray, ngbr_objective_functions: np.ndarray, T: float, K: float) -> float:
     """
     Compute the acceptance probability for a non-dominant neighbor solution.
     """
-    assert len(current_objective_functions) == len(ngbr_objective_functions), "Objective functions must have the same length."
+    assert T > 0, "Temperature must be positive."
+    assert K > 0, "K must be positive."
+    assert current_objective_functions.shape == ngbr_objective_functions.shape, "Objective functions must have the same shape."
 
     # compute average difference between objective functions
-    diff = 0
-    for i in range(len(current_objective_functions)):
-        diff += current_objective_functions[i] - ngbr_objective_functions[i]
-    diff /= len(current_objective_functions)
+    diff = np.mean(current_objective_functions - ngbr_objective_functions)
 
     # compute acceptance probability
     prob = np.exp(-diff / (K * T))
@@ -65,8 +62,9 @@ def acceptance_probability(current_objective_functions: list, ngbr_objective_fun
     return min(1, prob)
 
 
+
 def MOSA(initial_solution: list,
-         params: ProblemParams,
+         problem_params: ProblemParams,
          T_0: float = 800.0,
          max_iter: int = 200,
          max_non_improving_iter: int = 10,
@@ -81,7 +79,7 @@ def MOSA(initial_solution: list,
     # compute objective functions for the current solution
     current_objective_functions = np.array([0, 0, 0, 0])
     for period_solution in current_solution:
-        period_solution.compute_objective_functions(params)
+        period_solution.compute_objectives(problem_params)
         current_objective_functions += period_solution.objectives
 
     n_iter = 0  # number of iterations
@@ -91,7 +89,7 @@ def MOSA(initial_solution: list,
         ngbr_solution = []
 
         # generate neighbor solution
-        for period in range(params.num_periods):
+        for period in range(problem_params.num_periods):
 
             # get first and second part of the initial period solution
             current_first_part = current_solution[period].first_part.copy()
@@ -108,7 +106,7 @@ def MOSA(initial_solution: list,
                 ngbr_solution[period].set_second_part(current_second_part)
 
                 # adjust second part to satisfy constraints
-                ngbr_solution[period].adjust_second_part(params)
+                ngbr_solution[period].adjust_second_part(problem_params)
 
             else:
                 # copy first part
@@ -116,18 +114,18 @@ def MOSA(initial_solution: list,
 
                 # perturb second part
                 vehicle_to_substitute = np.random.choice(current_second_part)
-                new_vehicle = np.random.randint(params.num_vehicles)
+                new_vehicle = np.random.randint(problem_params.num_vehicles)
                 ngbr_second_part = current_second_part.copy()
                 ngbr_second_part[ngbr_second_part == vehicle_to_substitute] = new_vehicle
                 ngbr_solution[period].set_second_part(ngbr_second_part)
 
                 # adjust first part to satisfy constraints
-                ngbr_solution[period].adjust_first_part(params)
+                ngbr_solution[period].adjust_first_part(problem_params)
 
         # compute objective functions for the neighbor solution
         ngbr_objective_functions = np.array([0, 0, 0, 0])
         for period_solution in ngbr_solution:
-            period_solution.compute_objective_functions(params)
+            period_solution.compute_objectives(problem_params)
             ngbr_objective_functions += period_solution.objectives
 
         # increase number of non-improving iterations

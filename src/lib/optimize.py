@@ -1,8 +1,13 @@
 import numpy as np
-from deap.tools import sortNondominated
+from deap import creator, base, tools
 
 from .params import ProblemParams, SolverParams
 from .generate_solutions import generate_heuristic_solution, MOSA
+
+
+# create DEAP classes for non-dominated sorting
+creator.create("FitnessMinMulti", base.Fitness, weights=(-1.0, -1.0, -1.0, -1.0))
+creator.create("Individual", np.ndarray, fitness=creator.FitnessMinMulti)
 
 
 def compute_fitness(objectives: np.ndarray, avg_objectives: np.ndarray) -> np.float64:
@@ -25,15 +30,43 @@ def compute_n_seeds(fitness: float, min_fitness: float, max_fitness: float, S_mi
 
 
 def compute_crowding_distance() -> list:
+    # TODO
     pass
 
 
-def sort_nondominated(objective_values: list) -> list:
+def sort_seeds(objective_values: list) -> list:
     """
     Sort the seed population with non-dominated sorting.
     """
+    sorted_seeds_idx = []
 
-    return sorted_seeds
+    # create DEAP individuals and get fitness values
+    individuals = [creator.Individual(objectives) for objectives in population]
+    for ind in individuals:
+        ind.fitness.values = tuple(ind)
+
+    # apply non-dominated sorting and extract indexes
+    fronts_objectives = tools.sortNondominated(individuals, len(individuals), first_front_only=False)
+    fronts_indices = []
+    for i, front in enumerate(fronts_objectives):
+        front_indices = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
+        fronts_indices.append(front_indices)
+
+    # sort seeds by fronts and crowding distance
+    for indexes, objectives in zip(fronts_indices, fronts_objectives):
+        if len(indexes) == 1:
+            sorted_seeds_idx.append(front[0])
+
+        else:
+            # build auxiliary dictionary
+            aux_dict = {}
+            for idx, objectives in zip(front, objectives):
+                aux_dict[idx] = objectives
+
+            # sort by crowding distance
+            crowding_distances = compute_crowding_distance(objectives)
+
+    return sorted_seeds_idx
 
 
 def MOIWOA(initial_seeds: list,
@@ -103,7 +136,7 @@ def MOIWOA(initial_seeds: list,
         # truncate seed population if larger than upper limit
         if len(current_seeds) > N_max:
             # apply non-dominated sorting
-            sorted_seeds_idx = sort_nondominated(current_fitness_values)
+            sorted_seeds_idx = sort_seeds(current_fitness_values)
 
             # truncate seed population
             current_seeds = [current_seeds[i] for i in sorted_seeds_idx[:N_max]]

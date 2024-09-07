@@ -32,7 +32,6 @@ def dominates(target_objective: np.ndarray, comparison_objective: np.ndarray) ->
     return False
 
 
-
 def geometric_cooling(T: float, alpha: float) -> float:
     """
     Apply geometric cooling to the temperature.
@@ -60,7 +59,6 @@ def acceptance_probability(current_objective_functions: np.ndarray, ngbr_objecti
     prob = np.exp(-diff / (K * T))
 
     return min(1, prob)
-
 
 
 def MOSA(initial_solution: list,

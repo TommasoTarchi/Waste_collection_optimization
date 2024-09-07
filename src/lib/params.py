@@ -17,7 +17,7 @@ def check_ProblemParams(params):
     assert np.all(params.d >= 0), "Demand d must be non-negative."
 
 
-def check_SolverParams(params):
+def check_MosaMoiwoaSolverParams(params):
     """
     Check if the solver parameters are coherent.
     """
@@ -170,7 +170,7 @@ class ProblemParams:
         np.save(G_path, self.G)
 
 
-class SolverParams:
+class MosaMoiwoaSolverParams:
     """
     Class to store parameters of the solver.
     """
@@ -214,7 +214,7 @@ class SolverParams:
                 self.MOIWOA_max_iter = params['MOIWOA_max_iter']
 
         # check coherence of parameters
-        check_SolverParams(self)
+        check_MosaMoiwoaSolverParams(self)
 
     def save_to_dir(self, params_path):
         # save scalar parameters to json

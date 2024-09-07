@@ -1,3 +1,3 @@
-from .params import ProblemParams, SolverParams, SinglePeriodSolution
+from .params import ProblemParams, MosaMoiwoaSolverParams, SinglePeriodSolution
 from .generate_solutions import generate_heuristic_solution, dominates, MOSA
-from .optimize import sort_seeds, MOIWOA, MosaMoiwoaSolver
+from .solve_approximate import sort_seeds, MOIWOA, MosaMoiwoaSolver

@@ -29,42 +29,39 @@ def compute_n_seeds(fitness: float, min_fitness: float, max_fitness: float, S_mi
     return round(S)
 
 
-def compute_crowding_distance() -> list:
-    # TODO
-    pass
-
-
 def sort_seeds(objective_values: list) -> list:
     """
-    Sort the seed population with non-dominated sorting.
+    Sort the seed population with non-dominated sorting and crowding distance.
     """
     sorted_seeds_idx = []
 
-    # create DEAP individuals and get fitness values
-    individuals = [creator.Individual(objectives) for objectives in population]
+    # Create DEAP individuals and assign fitness values
+    individuals = [creator.Individual(objectives) for objectives in objective_values]
     for ind in individuals:
         ind.fitness.values = tuple(ind)
 
-    # apply non-dominated sorting and extract indexes
-    fronts_objectives = tools.sortNondominated(individuals, len(individuals), first_front_only=False)
-    fronts_indices = []
-    for i, front in enumerate(fronts_objectives):
-        front_indices = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
-        fronts_indices.append(front_indices)
+    # Apply non-dominated sorting
+    fronts = tools.sortNondominated(individuals, len(individuals), first_front_only=False)
 
     # sort seeds by fronts and crowding distance
-    for indexes, objectives in zip(fronts_indices, fronts_objectives):
-        if len(indexes) == 1:
-            sorted_seeds_idx.append(front[0])
+    for front in fronts:
+        if len(front) == 1:
+            front_idx = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
+            sorted_seeds_idx.append(front_idx[0])
 
-        else:
-            # build auxiliary dictionary
-            aux_dict = {}
-            for idx, objectives in zip(front, objectives):
-                aux_dict[idx] = objectives
+        elif len(front) > 1:
+            # compute crowding distance
+            tools.emo.assignCrowdingDist(front)
+            for ind in front:
+                if np.isinf(ind.fitness.crowding_dist):
+                    ind.fitness.crowding_dist = 1e6
 
-            # sort by crowding distance
-            crowding_distances = compute_crowding_distance(objectives)
+            # sort front by crowding distance
+            front.sort(key=lambda ind: ind.fitness.crowding_dist, reverse=True)
+
+            # Extract sorted indices
+            front_sorted = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
+            sorted_seeds_idx.extend(front_sorted)
 
     return sorted_seeds_idx
 

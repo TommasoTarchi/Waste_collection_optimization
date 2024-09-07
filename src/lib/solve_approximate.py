@@ -1,7 +1,7 @@
 import numpy as np
 from deap import creator, base, tools
 
-from .params import ProblemParams, SolverParams
+from .params import ProblemParams, MosaMoiwoaSolverParams
 from .generate_solutions import generate_heuristic_solution, MOSA
 
 
@@ -154,7 +154,7 @@ class MosaMoiwoaSolver:
     Solver class to solve the optimization problem (MOSA-MOIWOA).
     """
 
-    def __init__(self, problem_params: ProblemParams, solver_params: SolverParams):
+    def __init__(self, problem_params: ProblemParams, solver_params: MosaMoiwoaSolverParams):
         self.problem_params = problem_params
         self.solver_params = solver_params
         self.initial_solutions = None

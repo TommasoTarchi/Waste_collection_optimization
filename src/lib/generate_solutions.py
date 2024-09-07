@@ -1,6 +1,6 @@
 import numpy as np
 
-from .params import ProblemParams, SinglePeriodSolution
+from .params import ProblemParams, SinglePeriodVectorSolution
 
 
 def generate_heuristic_solution(problem_params: ProblemParams) -> list:
@@ -12,7 +12,7 @@ def generate_heuristic_solution(problem_params: ProblemParams) -> list:
 
     # generate solutions for each period with heuristic
     for period in range(problem_params.num_periods):
-        solution = SinglePeriodSolution(period)
+        solution = SinglePeriodVectorSolution(period)
         solution.init_heuristic(problem_params)
         solution_heuristic.append(solution)
 
@@ -93,7 +93,7 @@ def MOSA(initial_solution: list,
             current_first_part = current_solution[period].first_part.copy()
             current_second_part = current_solution[period].second_part.copy()
 
-            ngbr_solution.append(SinglePeriodSolution(period))
+            ngbr_solution.append(SinglePeriodVectorSolution(period))
 
             # generate neighbor period solution
             if np.random.uniform() < 0.5:

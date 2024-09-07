@@ -234,7 +234,7 @@ class MosaMoiwoaSolverParams:
             json.dump(params, f)
 
 
-class SinglePeriodSolution:
+class SinglePeriodVectorSolution:
     """
     Class to store solution of the problem (for a single period) in vector
     format.

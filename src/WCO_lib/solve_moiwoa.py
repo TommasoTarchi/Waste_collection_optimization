@@ -2,7 +2,7 @@ import numpy as np
 from deap import creator, base, tools
 
 from .params import ProblemParams, MosaMoiwoaSolverParams
-from .generate_solutions import generate_heuristic_solution, MOSA
+from .models_heuristic import generate_heuristic_solution, MOSA
 
 
 # create DEAP classes for non-dominated sorting

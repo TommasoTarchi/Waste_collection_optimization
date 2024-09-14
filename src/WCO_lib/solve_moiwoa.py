@@ -154,7 +154,7 @@ class MosaMoiwoaSolver:
     Solver class to solve the optimization problem (MOSA-MOIWOA).
     """
 
-    def __init__(self, problem_params: ProblemParams, solver_params: MosaMoiwoaSolverParams):
+    def __init__(self, problem_params: ProblemParams, solver_params: MosaMoiwoaSolverParams) -> None:
         self.problem_params = problem_params
         self.solver_params = solver_params
         self.initial_solutions = None

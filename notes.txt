@@ -38,6 +38,10 @@
 - Aggiungere requirements.
 - Aggiungere LICENSE.
 - Citare deap (se usata).
+- Far notare che nella risoluzione con epsilon-constraint method si è scelto il numero di trip
+  per periodo arbitrariamente uguale al numero di required edges (nel caso "peggiore" un solo
+  veicolo viene usato in un periodo, e tale veicolo fa un trip per ogni required edge, ergo
+  il numero massimo di trip possibile è uguale al numero di required edge).
 
 - Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
   le objective functions del primo e del secondo o del secondo e del primo.

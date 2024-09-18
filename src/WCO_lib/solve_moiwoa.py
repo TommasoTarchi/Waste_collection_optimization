@@ -151,7 +151,7 @@ def MOIWOA(initial_seeds: list,
 
 class MosaMoiwoaSolver:
     """
-    Solver class to solve the optimization problem (MOSA-MOIWOA).
+    Solver class to solve the optimization problem using MOSA-MOIWOA.
     """
 
     def __init__(self, problem_params: ProblemParams, solver_params: MosaMoiwoaSolverParams) -> None:

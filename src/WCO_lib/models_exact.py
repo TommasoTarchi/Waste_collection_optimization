@@ -1,4 +1,5 @@
 import gurobipy as gb
+import numpy as np
 
 from .params import ProblemParams
 
@@ -173,13 +174,27 @@ class BaseModel:
                 self.WT[k].append(LT_UT_xt_linear)
 
         # constraint (13)
-        # TODO
+        for t in range(T):
+            for p in range(P[t]):
+                for k in range(K):
+                    self.model.addCons
 
         # constraint (14)
-        # TODO
+        for t in range(T):
+            for k in range(K):
+                self.model.addConstr(gb.quicksum(self.x[1, j, k, 1, t] for j in range(V)) >=
+                                     gb.quicksum(self.x[V-1, j, k, 2, t] for j in range(V)))
 
         # constraint (15)
-        # TODO
+        for t in range(T):
+            for k in range(K):
+                # precompute linear expressions
+                sum_x_linear = []
+                for p in range(1, P[t]):
+                    sum_x_linear.append(gb.LinExpr([(1.0, self.x[V-1, j, k, p, t]) for j in range(V)]))
+                # set constraints
+                for p in range(1, P[t]-1):
+                    self.model.addConstr(sum_x_linear[p] >= sum_x_linear[p+1])
 
         # constraint (16)
         for t in range(T):
@@ -216,7 +231,9 @@ class BaseModel:
         LT_out = self.model.getAttr("x", self.LT)
         UT_out = self.model.getAttr("x", self.UT)
 
-        # notice that indexes are inverted in the output
+        # transform output in a more readable format
+        #
+        # (NOTICE that indexes are inverted in the output)
         self.x_best = [[[[[x_out[i, j, k, p, t] for i in range(self.V)]
                           for j in range(self.V)]
                          for k in range(self.K)]
@@ -231,7 +248,7 @@ class BaseModel:
         self.LT_best = [[[LT_out[k, p, t] for k in range(self.K)] for p in range(self.P[t])] for t in range(self.T)]
         self.UT_best = [[[UT_out[k, p, t] for k in range(self.K)] for p in range(self.P[t])] for t in range(self.T)]
 
-        # set flag to True
+        # set flag to True for other methods
         self.model_solved = True
 
     def return_status(self):
@@ -412,21 +429,101 @@ class SingleObjectModel3(BaseModel):
         self.model.setObjective(obj_function)
 
 
-def compute_objective0():
-    # TODO
+class SingleObjectModelMain(SingleObjectModel0):
+    """
+    Single-objective model with objective 0 and epsilon constraints.
+    """
+    # TODO: just add epsilon constraints to set_up_model
     pass
 
 
-def compute_objective1():
-    # TODO
-    pass
+def compute_objective0(theta: float, c: np.ndarray, cv: np.ndarray, x: list, u: list) -> float:
+    """
+    Compute the value of the objective function Z_0 (Z_1 in the original
+    paper).
+    """
+    # rename vars for convenience
+    T = len(x)
+    K = len(x[0][0])
+    V = len(x[0][0][0])
+
+    # compute objective
+    obj = 0
+    for i in range(V):
+        for j in range(V):
+            partial = 0
+            for t in range(T):
+                for p in range(len(x[t])):
+                    for k in range(K):
+                        partial += x[t][p][k][j][i]
+            obj += c[i, j] * partial
+    obj *= theta
+
+    for k in range(K):
+        partial = 0
+        for t in range(T):
+            partial += u[t][k]
+        obj += cv[k] * partial
+
+    return obj
 
 
-def compute_objective2():
-    # TODO
-    pass
+def compute_objective1(G: np.ndarray, x: list) -> float:
+    """
+    Compute the value of the objective function Z_1 (Z_2 in the original
+    paper).
+    """
+    # rename vars for convenience
+    T = len(x)
+    K = len(x[0][0])
+    V = len(x[0][0][0])
+
+    # compute objective
+    obj = 0
+    for i in range(V):
+        for j in range(V):
+            partial = 0
+            for t in range(T):
+                for p in range(len(x[t])):
+                    for k in range(K):
+                        partial += x[t][p][k][j][i]
+            obj += G[i, j] * partial
+
+    return obj
 
 
-def compute_objective3():
-    # TODO
-    pass
+def compute_objective2(sigma: float, u: list) -> float:
+    """
+    Compute the value of the objective function Z_2 (Z_3 in the original
+    paper).
+    """
+    return sigma * sum(u)
+
+
+def compute_objective3(t: np.ndarray, T_max: float, LT: list, UT: list, x: list) -> float:
+    """
+    Compute the value of the objective function Z_3 (Z_4 in the original
+    paper).
+    """
+    # rename vars for convenience
+    T = len(x)
+    K = len(x[0][0])
+    V = len(x[0][0][0])
+
+    # compute WT
+    WT = np.zeros((K, T), dtype=np.float64)
+
+    for k in range(K):
+        for t_idx in range(T):
+            LT_UT_xt = 0
+            for p in range(len(x[t_idx])):
+                LT_UT_xt += LT[t_idx][p][k] + UT[t_idx][p][k]
+                for i in range(V):
+                    for j in range(V):
+                        LT_UT_xt += t[i, j] * x[t_idx][p][k][j][i]
+            WT[k, t_idx] = LT_UT_xt
+
+    # compute objective
+    obj = K * T - float(np.sum(WT)) / T_max
+
+    return obj

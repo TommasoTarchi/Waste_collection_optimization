@@ -20,11 +20,9 @@ class BaseModel:
         self.LT = None
         self.UT = None
 
-        # compute maximum number of trips per period (assumed to be equal
-        # to the number of required edges in that period)
-        self.P = []
-        for req_edges in self.problem_params.required_edges:
-            self.P.append(len(req_edges))
+        # compute maximum number of trips (assumed to be equal to the number
+        # of required edges)
+        self.P = self.problem_params.num_required_edges
 
         # rename sets for convenience
         self.V = self.problem_params.num_nodes
@@ -58,36 +56,35 @@ class BaseModel:
         T = self.T
 
         # set variables (same indexes and names as in the paper)
-        self.x = self.model.addVars([(i, j, k, p, t) for i in range(V)
-                                     for j in range(V)
+        self.x = self.model.addVars([(i, j, k, p, t) for t in range(T)
+                                     for p in range(P)
                                      for k in range(K)
-                                     for t in range(T)
-                                     for p in range(P[t])],
+                                     for (i, j) in self.problem_params.existing_edges],
                                     vtype=gb.GRB.INTEGER,
                                     lb=0,
                                     name="x")
 
         self.y = self.model.addVars([(i, j, k, p, t) for t in range(T)
-                                     for (i, j) in self.problem_params.required_edges[t]
+                                     for p in range(P)
                                      for k in range(K)
-                                     for p in range(P[t])],
-                                    vtype=gb.GRB.BINARY,
+                                     for (i, j) in self.problem_params.required_edges[t]],
+                                    vtype=gb.GRB.BINAY,
                                     name="y")
 
-        self.u = self.model.addVars([(k, t) for k in range(K)
-                                     for t in range(T)],
+        self.u = self.model.addVars([(k, t) for t in range(T)
+                                     for k in range(K)],
                                     vtype=gb.GRB.BINARY,
                                     name="u")
 
         self.LT = self.model.addVars([(k, p, t) for t in range(T)
-                                      for p in range(P[t])
+                                      for p in range(P)
                                       for k in range(K)],
                                      vtype=gb.GRB.CONTINUOUS,
                                      lb=0.0,
                                      name="LT")
 
         self.UT = self.model.addVars([(k, p, t) for t in range(T)
-                                      for p in range(P[t])
+                                      for p in range(P)
                                       for k in range(K)],
                                      vtype=gb.GRB.CONTINUOUS,
                                      lb=0.0,
@@ -99,124 +96,135 @@ class BaseModel:
         # (constraints (20) and (21) are already included inside the definition of the variables)
 
         # constraint (5)
+        for t in range(T):
+            for p in range(P):
+                for k in range(K):
+                    # TODO
 
         # constraint (6)
         for t in range(T):
             for (i, j) in self.problem_params.required_edges[t]:
                 self.model.addConstr(gb.quicksum(self.y[i, j, k, p, t] + self.y[j, i, k, p, t]
                                                  for k in range(K)
-                                                 for p in range(P[t])) == 1)
+                                                 for p in range(P)) == 1)
 
         # precompute linear expression for scalar product between d and y
-        dy_linear = []
+        dy_linear = np.empty((K, P, T), dtype=gb.LinExpr)
         for t in range(T):
-            dy_linear.append([])
-            for p in range(P[t]):
-                dy_linear[t].append([])
+            for p in range(P):
                 for k in range(K):
-                    dy_linear[t][p].append(gb.LinExpr([(self.problem_params.d[i, j, t], self.y[i, j, k, p, t])
-                                                       for (i, j) in self.problem_params.required_edges[t]]))
+                    dy_linear[k, p, t] = gb.LinExpr([(self.problem_params.d[i, j, t], self.y[i, j, k, p, t])
+                                                     for (i, j) in self.problem_params.required_edges[t]])
 
         # constraint (7)
         for t in range(T):
-            for p in range(P[t]):
+            for p in range(P):
                 for k in range(K):
-                    self.model.addConstr(dy_linear[t][p][k] <= self.problem_params.W)
+                    self.model.addConstr(dy_linear[k, p, t] <= self.problem_params.W)
 
         # constraint (8)
         self.model.addConstrs(self.y[i, j, k, p, t] <= self.x[i, j, k, p, t]
                               for t in range(T)
-                              for (i, j) in self.problem_params.required_edges[t]
+                              for p in range(P)
                               for k in range(K)
-                              for p in range(P[t]))
+                              for (i, j) in self.problem_params.required_edges[t])
 
         # constraint (9)
         for t in range(T):
             for k in range(K):
-                self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t]
-                                                 for (i, j) in self.problem_params.required_edges[t]
-                                                 for p in range(P[t])) <= self.problem_params.M * self.u[k, t])
+                self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for p in range(P)
+                                                 for (i, j) in self.problem_params.required_edges[t])
+                                     <= self.problem_params.M * self.u[k, t])
 
         # constraint (10)
         for t in range(T):
-            for p in range(P[t]):
+            for p in range(P):
                 for k in range(K):
-                    self.model.addConstr(self.LT[k, p, t] <= self.problem_params.ul * dy_linear[t][p][k])
+                    self.model.addConstr(self.LT[k, p, t] <= self.problem_params.ul * dy_linear[k, p, t])
 
         # constraint (11)
         for t in range(T):
-            for p in range(P[t]):
+            for p in range(P):
                 for k in range(K):
-                    self.model.addConstr(self.UT[k, p, t] <= self.problem_params.uu * dy_linear[t][p][k])
+                    self.model.addConstr(self.UT[k, p, t] <= self.problem_params.uu * dy_linear[k, p, t])
 
         # constraint (12)
-        self.WT = []
+        self.WT = np.empty((K, T), dtype=gb.LinExpr)
         for k in range(K):
-            self.WT.append([])
             for t in range(T):
                 LT_UT_xt_linear = gb.LinExpr()
                 # add LT to expression
-                LT_UT_xt_linear.addTerms([1.0 for _ in range(P[t])],
-                                         [self.LT[k, p, t] for p in range(P[t])])
+                LT_UT_xt_linear.addTerms([1.0 for _ in range(P)],
+                                         [self.LT[k, p, t] for p in range(P)])
                 # add UT to expression
-                LT_UT_xt_linear.addTerms([1.0 for _ in range(P[t])],
-                                         [self.UT[k, p, t] for p in range(P[t])])
+                LT_UT_xt_linear.addTerms([1.0 for _ in range(P)],
+                                         [self.UT[k, p, t] for p in range(P)])
                 # add scalar product between x and t to expression
                 LT_UT_xt_linear.addTerms([self.problem_params.t[i, j]
-                                          for (i, j) in self.problem_params.required_edges[t]
-                                          for _ in range(P[t])],
+                                          for (i, j) in self.problem_params.existing_edges
+                                          for _ in range(P)],
                                          [self.x[i, j, k, p, t]
-                                          for (i, j) in self.problem_params.required_edges[t]
-                                          for p in range(P[t])])
+                                          for (i, j) in self.problem_params.existing_edges
+                                          for p in range(P)])
                 # set constraint from expression
                 self.model.addConstr(LT_UT_xt_linear <= self.problem_params.T_max)
+
                 # save precomputed expression for object function 3
-                self.WT[k].append(LT_UT_xt_linear)
+                self.WT[k, t] = LT_UT_xt_linear
 
         # constraint (13)
         for t in range(T):
-            for p in range(P[t]):
+            for p in range(P):
                 for k in range(K):
-                    self.model.addCons
+                    # TODO
+                    pass
 
         # constraint (14)
         for t in range(T):
             for k in range(K):
-                self.model.addConstr(gb.quicksum(self.x[1, j, k, 1, t] for j in range(V)) >=
-                                     gb.quicksum(self.x[V-1, j, k, 2, t] for j in range(V)))
+                self.model.addConstr(gb.quicksum(self.x[i, j, k, 1, t] for (i, j) in self.problem_params.existing_edges
+                                                 if i == 0) >=
+                                     gb.quicksum(self.x[i, j, k, 2, t] for (i, j) in self.problem_params.existing_edges
+                                                 if i == V-1))
 
         # constraint (15)
         for t in range(T):
             for k in range(K):
                 # precompute linear expressions
-                sum_x_linear = []
-                for p in range(1, P[t]):
-                    sum_x_linear.append(gb.LinExpr([(1.0, self.x[V-1, j, k, p, t]) for j in range(V)]))
+                sum_x_linear = np.empty(P, dtype=gb.LinExpr)
+                for p in range(1, P):
+                    sum_x_linear[p] = gb.LinExpr([(1.0, self.x[i, j, k, p, t])
+                                                  for (i, j) in self.problem_params.existing_edges
+                                                  if i == V-1])
                 # set constraints
-                for p in range(1, P[t]-1):
+                for p in range(1, P-1):
                     self.model.addConstr(sum_x_linear[p] >= sum_x_linear[p+1])
 
         # constraint (16)
         for t in range(T):
             for k in range(K):
-                self.model.addConstr(gb.quicksum(self.x[1, j, k, 1, t] for j in range(1, V-1)) == self.u[k, t])
+                self.model.addConstr(gb.quicksum(self.x[i, j, k, 1, t] for (i, j) in self.problem_params.existing_edges
+                                                 if i == 0 and j in range(1, V-1)) == self.u[k, t])
 
         # constraints (17)
         for t in range(T):
             for k in range(K):
-                self.model.addConstr(gb.quicksum(self.x[j, V-1, k, 1, t] for j in range(1, V-1)) == self.u[k, t])
+                self.model.addConstr(gb.quicksum(self.x[i, j, k, 1, t] for (i, j) in self.problem_params.existing_edges
+                                                 if i in range(1, V-1) and j == V-1) == self.u[k, t])
 
         # constraint (18)
         for t in range(T):
-            for p in range(1, P[t]):
+            for p in range(1, P):
                 for k in range(K):
-                    self.model.addConstr(gb.quicksum(self.x[V-1, j, k, p, t] for j in range(1, V-1)) <= self.u[k, t])
+                    self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
+                                                     if i == V-1 and j in range(1, V-1)) <= self.u[k, t])
 
         # constraint (19)
         for t in range(T):
-            for p in range(1, P[t]):
+            for p in range(1, P):
                 for k in range(K):
-                    self.model.addConstr(gb.quicksum(self.x[j, V-1, k, p, t] for j in range(1, V-1)) <= self.u[k, t])
+                    self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
+                                                     if i in range(1, V-1) and j == V-1) <= self.u[k, t])
 
     def solve(self) -> None:
         """
@@ -231,22 +239,19 @@ class BaseModel:
         LT_out = self.model.getAttr("x", self.LT)
         UT_out = self.model.getAttr("x", self.UT)
 
-        # transform output in a more readable format
-        #
-        # (NOTICE that indexes are inverted in the output)
-        self.x_best = [[[[[x_out[i, j, k, p, t] for i in range(self.V)]
-                          for j in range(self.V)]
-                         for k in range(self.K)]
-                        for p in range(self.P[t])]
-                       for t in range(self.T)]
-        self.y_best = [[[[[y_out[i, j, k, p, t] for i in range(self.V)]
-                          for j in range(self.V)]
-                         for k in range(self.K)]
-                        for p in range(self.P[t])]
-                       for t in range(self.T)]
-        self.u_best = [[u_out[k, t] for k in range(self.K)] for t in range(self.T)]
-        self.LT_best = [[[LT_out[k, p, t] for k in range(self.K)] for p in range(self.P[t])] for t in range(self.T)]
-        self.UT_best = [[[UT_out[k, p, t] for k in range(self.K)] for p in range(self.P[t])] for t in range(self.T)]
+        # transform output in numpy array format
+        self.x_best = np.empty((self.T, self.P, self.K, len(self.problem_params.existing_edges)), dtype=np.int64)
+        self.y_best = np.empty((self.T, self.P, self.K, len(self.problem_params.existing_edges)), dtype=np.int64)
+
+        for t in range(self.T):
+            for p in range(self.P):
+                for k in range(self.K):
+                    self.x_best[k, p, t, :] = np.array([x_out[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges])
+                    self.y_best[k, p, t, :] = np.array([y_out[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges])
+
+        self.u_best = np.array([[u_out[k, t] for t in range(self.T)] for k in range(self.K)])
+        self.LT_best = np.array([[[LT_out[k, p, t] for t in range(self.T)] for p in range(self.P)] for k in range(self.K)])
+        self.UT_best = np.array([[[UT_out[k, p, t] for t in range(self.T)] for p in range(self.P)] for k in range(self.K)])
 
         # set flag to True for other methods
         self.model_solved = True
@@ -256,8 +261,7 @@ class BaseModel:
         Return the status of the optimization.
         """
         if not self.model_solved:
-            print("ERROR: model was not solved. Please run 'model.solve()' before retrieving status.")
-            return
+            raise Exception("ERROR: model was not solved. Please run 'model.solve()' before retrieving status.")
 
         return self.model.status
 
@@ -266,8 +270,7 @@ class BaseModel:
         Return the value of the objective function computed on the best solutions.
         """
         if not self.model_solved:
-            print("ERROR: model was not solved. Please run 'model.solve()' before retrieving objective.")
-            return
+            raise Exception("ERROR: model was not solved. Please run 'model.solve()' before retrieving objective.")
 
         return self.model.objVal
 
@@ -276,8 +279,7 @@ class BaseModel:
         Return the best solution found.
         """
         if not self.model_solved:
-            print("ERROR: model was not solved. Please run 'model.solve()' before retrieving solution.")
-            return
+            raise Exception("ERROR: model was not solved. Please run 'model.solve()' before retrieving solution.")
 
         if self.model.status == gb.GRB.OPTIMAL:
             print("WARNING: index order is inverted in the output.")
@@ -309,7 +311,6 @@ class SingleObjectModel0(BaseModel):
 
         # rename sets for convenience
         P = self.P
-        V = self.V
         K = self.K
         T = self.T
 
@@ -318,11 +319,10 @@ class SingleObjectModel0(BaseModel):
 
         # build objective function
         obj_function = self.problem_params.theta * gb.LinExpr([(self.problem_params.c[i, j], self.x[i, j, k, p, t])
-                                                               for i in range(V)
-                                                               for j in range(V)
                                                                for t in range(T)
-                                                               for p in range(P[t])
-                                                               for k in range(K)])
+                                                               for p in range(P)
+                                                               for k in range(K)
+                                                               for (i, j) in self.problem_params.existing_edges])
 
         obj_function.addTerms([self.problem_params.cv[k] for k in range(K) for _ in range(T)],
                               [self.u[k, t] for k in range(K) for t in range(T)])
@@ -348,7 +348,6 @@ class SingleObjectModel1(BaseModel):
 
         # rename sets for convenience
         P = self.P
-        V = self.V
         K = self.K
         T = self.T
 
@@ -357,11 +356,10 @@ class SingleObjectModel1(BaseModel):
 
         # build objective function
         obj_function = gb.LinExpr([(self.problem_params.G[i, j], self.x[i, j, k, p, t])
-                                   for i in range(V)
-                                   for j in range(V)
                                    for t in range(T)
-                                   for p in range(P[t])
-                                   for k in range(K)])
+                                   for p in range(P)
+                                   for k in range(K)
+                                   for (i, j) in self.problem_params.existing_edges])
 
         # set objective function
         self.model.setObjective(obj_function)
@@ -421,7 +419,7 @@ class SingleObjectModel3(BaseModel):
         self.model.modelSense = gb.GRB.MINIMIZE
 
         # build objective function
-        obj_function = gb.LinExpr([(1.0, self.WT[k][t]) for k in range(K) for t in range(T)])
+        obj_function = gb.LinExpr([(1.0, self.WT[k, t]) for k in range(K) for t in range(T)])
 
         obj_function = T * K - obj_function / self.problem_params.T_max
 
@@ -433,95 +431,92 @@ class SingleObjectModelMain(SingleObjectModel0):
     """
     Single-objective model with objective 0 and epsilon constraints.
     """
-    # TODO: just add epsilon constraints to set_up_model
-    pass
+
+    def __init__(self, problem_params: ProblemParams,
+                 eps1: float,
+                 eps2: float,
+                 eps3: float) -> None:
+        super().__init__(problem_params)
+
+        self.eps1 = eps1
+        self.eps2 = eps2
+        self.eps3 = eps3
+
+    def set_up_model(self) -> None:
+        """
+        Set constraints and objective of main single objective model.
+        """
+        super().set_up_model()
+
+        # set model for minimization
+        self.model.modelSense = gb.GRB.MINIMIZE
+
+        # add epsilon constraints
+        # TODO (remember >=eps2)
 
 
-def compute_objective0(theta: float, c: np.ndarray, cv: np.ndarray, x: list, u: list) -> float:
+def compute_objective0(theta: float,
+                       c: np.ndarray,
+                       cv: np.ndarray,
+                       existing_edges: list,
+                       x: np.ndarray,
+                       u: np.ndarray) -> float:
     """
-    Compute the value of the objective function Z_0 (Z_1 in the original
-    paper).
+    Compute the value of the objective function Z_0 (Z_1 in the original paper).
     """
-    # rename vars for convenience
-    T = len(x)
-    K = len(x[0][0])
-    V = len(x[0][0][0])
-
-    # compute objective
     obj = 0
-    for i in range(V):
-        for j in range(V):
-            partial = 0
-            for t in range(T):
-                for p in range(len(x[t])):
-                    for k in range(K):
-                        partial += x[t][p][k][j][i]
-            obj += c[i, j] * partial
+
+    # first term
+    partial_sums = np.sum(x, axis=(0, 1, 2))
+    for (count, (i, j)) in enumerate(existing_edges):
+        obj += c[i, j] * partial_sums[count]
     obj *= theta
 
-    for k in range(K):
-        partial = 0
-        for t in range(T):
-            partial += u[t][k]
-        obj += cv[k] * partial
+    # second term
+    obj += cv @ np.sum(u, axis=1)
 
     return obj
 
 
-def compute_objective1(G: np.ndarray, x: list) -> float:
+def compute_objective1(G: np.ndarray, existing_edges: list, x: np.ndarray) -> float:
     """
-    Compute the value of the objective function Z_1 (Z_2 in the original
-    paper).
+    Compute the value of the objective function Z_1 (Z_2 in the original paper).
     """
-    # rename vars for convenience
-    T = len(x)
-    K = len(x[0][0])
-    V = len(x[0][0][0])
-
-    # compute objective
     obj = 0
-    for i in range(V):
-        for j in range(V):
-            partial = 0
-            for t in range(T):
-                for p in range(len(x[t])):
-                    for k in range(K):
-                        partial += x[t][p][k][j][i]
-            obj += G[i, j] * partial
+    partial_sums = np.sum(x, axis=(0, 1, 2))
+    for (count, (i, j)) in enumerate(existing_edges):
+        obj += G[i, j] * partial_sums[count]
 
     return obj
 
 
-def compute_objective2(sigma: float, u: list) -> float:
+def compute_objective2(sigma: float, u: np.ndarray) -> float:
     """
-    Compute the value of the objective function Z_2 (Z_3 in the original
-    paper).
+    Compute the value of the objective function Z_2 (Z_3 in the original paper).
     """
-    return sigma * sum(u)
+    return sigma * np.sum(u)
 
 
-def compute_objective3(t: np.ndarray, T_max: float, LT: list, UT: list, x: list) -> float:
+def compute_objective3(t: np.ndarray,
+                       T_max: float,
+                       existing_edges: list,
+                       LT: np.ndarray,
+                       UT: np.ndarray,
+                       x: np.ndarray) -> float:
     """
-    Compute the value of the objective function Z_3 (Z_4 in the original
-    paper).
+    Compute the value of the objective function Z_3 (Z_4 in the original paper).
     """
     # rename vars for convenience
-    T = len(x)
-    K = len(x[0][0])
-    V = len(x[0][0][0])
+    K = x.shape[0]
+    T = x.shape[2]
 
     # compute WT
-    WT = np.zeros((K, T), dtype=np.float64)
-
-    for k in range(K):
-        for t_idx in range(T):
-            LT_UT_xt = 0
-            for p in range(len(x[t_idx])):
-                LT_UT_xt += LT[t_idx][p][k] + UT[t_idx][p][k]
-                for i in range(V):
-                    for j in range(V):
-                        LT_UT_xt += t[i, j] * x[t_idx][p][k][j][i]
-            WT[k, t_idx] = LT_UT_xt
+    WT = np.sum(LT, axis=1) + np.sum(UT, axis=1)
+    for t_idx in range(T):
+        for k in range(K):
+            partial_sums = np.sum(x[k, :, t_idx, :], axis=0)
+            for (count, (i, j)) in enumerate(existing_edges):
+                WT[k, t_idx] += t[i, j] * partial_sums[count]
 
     # compute objective
     obj = K * T - float(np.sum(WT)) / T_max

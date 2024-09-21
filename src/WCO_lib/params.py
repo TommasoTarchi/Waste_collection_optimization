@@ -7,6 +7,7 @@ def check_ProblemParams(params):
     Check if the problem parameters are coherent.
     """
     # check the size of arrays
+    assert params.num_edges == params.existing_edges, "Number of existing edges not coherent with problem size."
     assert params.c.shape == (params.num_nodes, params.num_nodes), "Shape of c not coherent with problem size."
     assert params.d.shape == (params.num_nodes, params.num_nodes, params.num_periods), "Shape of d not coherent with problem size."
     assert params.t.shape == (params.num_nodes, params.num_nodes), "Shape of t not coherent with problem size."
@@ -15,6 +16,15 @@ def check_ProblemParams(params):
 
     # check demand is non-negative
     assert np.all(params.d >= 0), "Demand d must be non-negative."
+
+    # check that the number of required edges is the same across all periods
+    num_req_temp = params.num_required_edges
+    for t in range(params.num_periods):
+        assert len(params.required_edges[t]) == num_req_temp, "Number of required edges must be coherent with problem size AND the same across all periods."
+
+    # check that required edges exist
+    for (i, j) in params.required_edges:
+        assert (i, j) in params.existing_edges, "Required edges must exist."
 
 
 def check_MosaMoiwoaSolverParams(params):
@@ -63,14 +73,15 @@ class ProblemParams:
     def __init__(self):
         # size of the problem
         self.num_nodes = 0  # number of nodes
-        self.num_edges = 0  # number of edges
+        self.num_edges = 0  # number of existing edges
+        self.num_required_edges = 0  # number of required edges
         self.num_vehicles = 0  # number of vehicles
         self.num_periods = 0  # number of planning periods
 
         # parameters of the problem
-        self.c = None  # edge distance (not necessarily symmetric)
+        self.c = None  # edge distance (not necessarily symmetric; elements are zero if edge does not exist)
         self.W = 0  # vehicle capacity
-        self.d = None  # edge demand at each period
+        self.d = None  # edge demand at each period (0 for no demand
         self.T_max = 0  # maximum available time for vehicles
         self.M = 0  # a large number
         self.t = None  # traversing time of edges
@@ -80,6 +91,9 @@ class ProblemParams:
         self.sigma = 0  # number of workforce per vehicle
         self.ul = 0  # conversion factor of demand to loading time
         self.uu = 0  # conversion factor of demand to unloading time
+
+        # existing edges coordinates (i is staring point and j is ending point)
+        self.existing_edges = None
 
         # required edges coordinates (i is staring point and j is ending point)
         self.required_edges = None
@@ -100,6 +114,8 @@ class ProblemParams:
         with open(params_path) as f:
             params = json.load(f)
             self.num_nodes = params['num_nodes']
+            self.num_edges = params['num_edges']
+            self.num_required_edges = params['num_required_edges']
             self.num_vehicles = params['num_vehicles']
             self.num_periods = params['num_periods']
             self.W = params['W']
@@ -117,17 +133,22 @@ class ProblemParams:
         self.cv = np.load(cv_path)
         self.G = np.load(G_path)
 
-        # compute total number of edges
-        self.num_edges = self.num_nodes * self.num_nodes
+        # compute existing edges coordinates (list of tuples)
+        existing_coord = []
+        for i in range(self.num_nodes):
+            for j in range(i+1, self.num_nodes):
+                if self.c[i, j] > 0:
+                    existing_coord.append((i, j))
+        self.existing_edges = existing_coord
 
         # compute required edges coordinates for each period (list of
         # lists of tuples)
         required_coord = []
-        for _ in range(self.num_periods):
+        for t in range(self.num_periods):
             required_coord.append([])
             for i in range(self.num_nodes):
                 for j in range(i+1, self.num_nodes):
-                    if self.d[i, j] > 0:
+                    if self.d[i, j, t] > 0:
                         required_coord[-1].append((i, j))
         self.required_edges = required_coord
 
@@ -150,6 +171,8 @@ class ProblemParams:
         with open(params_path, 'w') as f:
             params = {
                 'num_nodes': self.num_nodes,
+                'num_edges': self.num_edges,
+                'num_required_edges': self.num_required_edges,
                 'num_vehicles': self.num_vehicles,
                 'num_periods': self.num_periods,
                 'W': self.W,

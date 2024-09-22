@@ -1,13 +1,50 @@
 import gurobipy as gb
 import numpy as np
+import itertools
 
 from .params import ProblemParams
+
+
+def find_subsets(edge_list):
+    """
+    Function to find all subsets of the set of all edges.
+    Also returns the list of indices of vertices in and not in each subset.
+    """
+    subsets = []  # list of subsets
+    vertices = []  # list of vertices in subsets
+    vertices_not = []  # list of vertices not in subsets
+
+    # find all subsets with corresponding indices
+    for num_edges in range(1, len(edge_list) + 1):
+        sub = list(itertools.combinations(edge_list, num_edges))
+        subsets.extend(sub)
+        vertices.append([])
+        for edge in list(sub):
+            if not edge[0] in vertices[-1]:
+                vertices[-1].append(edge[0])
+            if not edge[1] in vertices[-1]:
+                vertices[-1].append(edge[1])
+
+    # find all vertices
+    all_vertices = []
+    for edge in edge_list:
+        if not edge[0] in all_vertices:
+            all_vertices.append(edge[0])
+        if not edge[1] in all_vertices:
+            all_vertices.append(edge[1])
+
+    # find indices not in subsets
+    for vertices_set in vertices:
+        vertices_not.append([vertex for vertex in all_vertices if vertex not in vertices_set])
+
+    return subsets, vertices, vertices_not
 
 
 class BaseModel:
     """
     Base class for setting variables and constraints of the model, and to retrieve
     solutions.
+
     NOTICE: this is just a "template" class, it should NOT be used directly.
     """
 
@@ -96,10 +133,28 @@ class BaseModel:
         # (constraints (20) and (21) are already included inside the definition of the variables)
 
         # constraint (5)
+        # compute vertices touched by existing edges (without first and last)
+        touched_vertices = []
+        for edge in self.problem_params.existing_edges:
+            if not edge[0] in touched_vertices:
+                touched_vertices.append(edge[0])
+            if not edge[1] in touched_vertices:
+                touched_vertices.append(edge[1])
+        if 0 in touched_vertices:
+            touched_vertices.remove(0)
+        if V-1 in touched_vertices:
+            touched_vertices.remove(V-1)
+
+        # add constraint
         for t in range(T):
             for p in range(P):
                 for k in range(K):
-                    # TODO
+                    for i in touched_vertices:
+                        outgoing_edges = gb.LinExpr([(1.0, self.x[i, j, k, p, t]) for j in touched_vertices
+                                                     if (i, j) in self.problem_params.existing_edges])
+                        incoming_edges = gb.LinExpr([(1.0, self.x[j, i, k, p, t]) for j in touched_vertices
+                                                     if (j, i) in self.problem_params.existing_edges])
+                        self.model.addConstr(outgoing_edges == incoming_edges)
 
         # constraint (6)
         for t in range(T):
@@ -173,11 +228,23 @@ class BaseModel:
                 self.WT[k, t] = LT_UT_xt_linear
 
         # constraint (13)
+        # compute subsets
+        subsets, subsets_vertices, subsets_vertices_not = find_subsets(self.problem_params.existing_edges)
         for t in range(T):
             for p in range(P):
                 for k in range(K):
-                    # TODO
-                    pass
+                    for idx in range(len(subsets)):
+                        # compute expressions
+                        left_hand_side = gb.LinExpr([(1.0, self.x[i, j, k, p, t])
+                                                     for (i, j) in subsets[idx]])
+                        right_hand_side = gb.LinExpr([(1.0, self.x[i, j, k, p, t])
+                                                      for (i, j) in self.problem_params.existing_edges
+                                                      if i in subsets_vertices_not[idx]
+                                                      if j in subsets_vertices[idx]
+                                                      if not j == 0 and not j == V-1])
+
+                        # set constraint
+                        self.model.addConstr(left_hand_side <= self.problem_params.M * right_hand_side)
 
         # constraint (14)
         for t in range(T):
@@ -448,11 +515,41 @@ class SingleObjectModelMain(SingleObjectModel0):
         """
         super().set_up_model()
 
+        # rename sets for convenience
+        P = self.P
+        K = self.K
+        T = self.T
+
+        # add epsilon constraints
+        self.model.addConstr(gb.LinExpr([(self.problem_params.G[i, j], self.x[i, j, k, p, t])
+                                         for t in range(T)
+                                         for p in range(P)
+                                         for k in range(K)
+                                         for (i, j) in self.problem_params.existing_edges]) <= self.eps1)
+
+        self.model.addConstr(gb.LinExpr([(self.problem_params.sigma, self.u[k, t])
+                                         for t in range(T)
+                                         for k in range(K)]) >= self.eps2)
+
+        lin_expr_part = gb.LinExpr([(1.0, self.WT[k, t]) for k in range(K) for t in range(T)])
+        lin_expr = T * K - lin_expr_part / self.problem_params.T_max
+        self.model.addConstr(lin_expr <= self.eps3)
+
         # set model for minimization
         self.model.modelSense = gb.GRB.MINIMIZE
 
-        # add epsilon constraints
-        # TODO (remember >=eps2)
+        # build objective function
+        obj_function = self.problem_params.theta * gb.LinExpr([(self.problem_params.c[i, j], self.x[i, j, k, p, t])
+                                                               for t in range(T)
+                                                               for p in range(P)
+                                                               for k in range(K)
+                                                               for (i, j) in self.problem_params.existing_edges])
+
+        obj_function.addTerms([self.problem_params.cv[k] for k in range(K) for _ in range(T)],
+                              [self.u[k, t] for k in range(K) for t in range(T)])
+
+        # set objective function
+        self.model.setObjective(obj_function)
 
 
 def compute_objective0(theta: float,

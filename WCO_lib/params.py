@@ -7,24 +7,25 @@ def check_ProblemParams(params):
     Check if the problem parameters are coherent.
     """
     # check the size of arrays
-    assert params.num_edges == params.existing_edges, "Number of existing edges not coherent with problem size."
+    assert params.num_edges == int(len(params.existing_edges) / 2), "Number of existing edges not coherent with problem size."
     assert params.c.shape == (params.num_nodes, params.num_nodes), "Shape of c not coherent with problem size."
     assert params.d.shape == (params.num_nodes, params.num_nodes, params.num_periods), "Shape of d not coherent with problem size."
     assert params.t.shape == (params.num_nodes, params.num_nodes), "Shape of t not coherent with problem size."
-    assert params.cv.shape == (params.num_vehicles), "Shape of cv not coherent with problem size."
+    assert params.cv.shape == (params.num_vehicles,), "Shape of cv not coherent with problem size."
     assert params.G.shape == (params.num_nodes, params.num_nodes), "Shape of G not coherent with problem size."
 
     # check demand is non-negative
     assert np.all(params.d >= 0), "Demand d must be non-negative."
 
     # check that the number of required edges is the same across all periods
-    num_req_temp = params.num_required_edges
+    num_req_edge_comp = params.num_required_edges * 2
     for t in range(params.num_periods):
-        assert len(params.required_edges[t]) == num_req_temp, "Number of required edges must be coherent with problem size AND the same across all periods."
+        assert len(params.required_edges[t]) == num_req_edge_comp, "Number of required edges must be coherent with problem size AND the same across all periods."
 
     # check that required edges exist
-    for (i, j) in params.required_edges:
-        assert (i, j) in params.existing_edges, "Required edges must exist."
+    for t in range(params.num_periods):
+        for (i, j) in params.required_edges[t]:
+            assert (i, j) in params.existing_edges, "Required edges must exist."
 
 
 def check_MosaMoiwoaSolverParams(params):
@@ -74,14 +75,14 @@ class ProblemParams:
         # size of the problem
         self.num_nodes = 0  # number of nodes
         self.num_edges = 0  # number of existing edges
-        self.num_required_edges = 0  # number of required edges
+        self.num_required_edges = 0  # number of required edges per period (counted once in symmetric matrix)
         self.num_vehicles = 0  # number of vehicles
         self.num_periods = 0  # number of planning periods
 
         # parameters of the problem
-        self.c = None  # edge distance (not necessarily symmetric; elements are zero if edge does not exist)
+        self.c = None  # edge distance (symmetric; elements are zero if edge does not exist)
         self.W = 0  # vehicle capacity
-        self.d = None  # edge demand at each period (0 for no demand
+        self.d = None  # edge demand at each period (0 for no demand)
         self.T_max = 0  # maximum available time for vehicles
         self.M = 0  # a large number
         self.t = None  # traversing time of edges
@@ -101,14 +102,14 @@ class ProblemParams:
         # number of periods each vehicle is employed for
         self.periods_employed = None
 
-    def load_from_dir(self, data_path):
+    def load_from_dir(self, data_dir):
         # define paths to init data
-        params_path = data_path + '/scalar.json'
-        c_path = data_path + '/c.npy'
-        d_path = data_path + '/d.npy'
-        t_path = data_path + '/t.npy'
-        cv_path = data_path + '/cv.npy'
-        G_path = data_path + '/G.npy'
+        params_path = data_dir + '/problem_parameters.json'
+        c_path = data_dir + '/c.npy'
+        d_path = data_dir + '/d.npy'
+        t_path = data_dir + '/t.npy'
+        cv_path = data_dir + '/cv.npy'
+        G_path = data_dir + '/G.npy'
 
         # load scalar parameters from json
         with open(params_path) as f:
@@ -133,12 +134,15 @@ class ProblemParams:
         self.cv = np.load(cv_path)
         self.G = np.load(G_path)
 
+        print(f"Shape of d from class: {self.d.shape}")
+
         # compute existing edges coordinates (list of tuples)
         existing_coord = []
         for i in range(self.num_nodes):
             for j in range(i+1, self.num_nodes):
                 if self.c[i, j] > 0:
                     existing_coord.append((i, j))
+                    existing_coord.append((j, i))
         self.existing_edges = existing_coord
 
         # compute required edges coordinates for each period (list of
@@ -150,6 +154,7 @@ class ProblemParams:
                 for j in range(i+1, self.num_nodes):
                     if self.d[i, j, t] > 0:
                         required_coord[-1].append((i, j))
+                        required_coord[-1].append((j, i))
         self.required_edges = required_coord
 
         # init periods periods employed
@@ -158,14 +163,14 @@ class ProblemParams:
         # check coherence of parameters
         check_ProblemParams(self)
 
-    def save_to_dir(self, data_path):
+    def save_to_dir(self, data_dir):
         # define paths to init data
-        params_path = data_path + '/scalar.json'
-        c_path = data_path + '/c.npy'
-        d_path = data_path + '/d.npy'
-        t_path = data_path + '/t.npy'
-        cv_path = data_path + '/cv.npy'
-        G_path = data_path + '/G.npy'
+        params_path = data_dir + '/problem_parameters.json'
+        c_path = data_dir + '/c.npy'
+        d_path = data_dir + '/d.npy'
+        t_path = data_dir + '/t.npy'
+        cv_path = data_dir + '/cv.npy'
+        G_path = data_dir + '/G.npy'
 
         # save scalar parameters to json
         with open(params_path, 'w') as f:
@@ -240,7 +245,7 @@ class MosaMoiwoaSolverParams:
         check_MosaMoiwoaSolverParams(self)
 
     def save_to_dir(self, params_path):
-        # save scalar parameters to json
+        # save parameters to json
         with open(params_path, 'w') as f:
             params = {
                 'N_0': self.N_0,

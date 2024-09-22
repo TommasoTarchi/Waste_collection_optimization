@@ -42,6 +42,11 @@
   per periodo arbitrariamente uguale al numero di required edges (nel caso "peggiore" un solo
   veicolo viene usato in un periodo, e tale veicolo fa un trip per ogni required edge, ergo
   il numero massimo di trip possibile è uguale al numero di required edge).
+- Far notare che si è cambiato il constraint (5) togliendo la condizione dal primo e dall'ultimo
+  nodo (perché il viaggio può partire e finire in quei nodi -  ci dovrebbero pensare i constraint
+  (16) e (17) ai nodi di partenza e arrivo).
+- Spiegare come si sono generati i valori di c, in particilare come si è formato il connected
+  graph.
 
 - Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
   le objective functions del primo e del secondo o del secondo e del primo.

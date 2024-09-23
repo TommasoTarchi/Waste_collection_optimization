@@ -20,16 +20,11 @@ class EpsilonSolver:
     approach.
     """
 
-    def __init__(self, problem_params: ProblemParams, num_epsilon: int) -> None:
+    def __init__(self, problem_params: ProblemParams) -> None:
         self.problem_params = problem_params
-        self.num_epsilon = num_epsilon
         self.objectives = None
         self.epsilon_values = None
         self.final_solutions = None
-
-        # check epsilon positive
-        if num_epsilon <= 0:
-            raise ValueError("Parameter 'num_epsilon' must be positive")
 
     def solve_single_objectives(self) -> None:
         """
@@ -54,16 +49,16 @@ class EpsilonSolver:
 
         # check models' status
         if model0.return_status() == gb.GRB.OPTIMAL:
-            print("WARNING: single-objective model with objective 0 was not solved optimally.")
+            print("\nWARNING: single-objective model with objective 0 was not solved optimally.\n")
 
         if model1.return_status() == gb.GRB.OPTIMAL:
-            print("WARNING: single-objective model with objective 1 was not solved optimally.")
+            print("\nWARNING: single-objective model with objective 1 was not solved optimally.\n")
 
         if model2.return_status() == gb.GRB.OPTIMAL:
-            print("WARNING: single-objective model with objective 2 was not solved optimally.")
+            print("\nWARNING: single-objective model with objective 2 was not solved optimally.\n")
 
         if model3.return_status() == gb.GRB.OPTIMAL:
-            print("WARNING: single-objective model with objective 3 was not solved optimally.")
+            print("\nWARNING: single-objective model with objective 3 was not solved optimally.\n")
 
         # get best solutions
         solutions = [model0.return_best_solution(),
@@ -94,20 +89,22 @@ class EpsilonSolver:
 
         objectives3 = []
         for i in range(4):
-            objectives3.append(compute_objective3(self.problem_params.t,
-                                                  self.problem_params.T_max,
-                                                  self.problem_params.existing_edges,
-                                                  solutions[i]["LT"],
-                                                  solutions[i]["UT"],
-                                                  solutions[i]["x"]))
+            objectives3.append(compute_objective3(self.problem_params.T_max,
+                                                  self.problem_params.num_vehicles,
+                                                  self.problem_params.num_periods,
+                                                  solutions[i]["WT"]))
 
         # save objectives
         self.objectives = [objectives0, objectives1, objectives2, objectives3]
 
-    def compute_epsilon(self) -> None:
+    def compute_epsilon(self, num_epsilon: int) -> None:
         """
         Compute epsilon values for all objectives.
         """
+        # check epsilon positive
+        if num_epsilon <= 0:
+            raise ValueError("Parameter 'num_epsilon' must be positive")
+
         if self.objectives is None:
             raise ValueError("Objectives must be computed first. Please run 'solve_single_objectives' method first.")
 
@@ -116,15 +113,15 @@ class EpsilonSolver:
         for i in (1, 3):
             objectives = self.objectives[i]
             objectives.sort()
-            epsilons.append(np.linspace(objectives[0], objectives[1], num=self.num_epsilon))
+            epsilons.append(np.linspace(objectives[0], objectives[1], num=num_epsilon))
         objectives = self.objectives[2]
         objectives.sort(reverse=True)
-        epsilons.append(np.linspace(objectives[1], objectives[0], num=self.num_epsilon))
+        epsilons.append(np.linspace(objectives[1], objectives[0], num=num_epsilon))
 
         # combine epsilon values
         self.epsilon_values = list(product(*epsilons))
 
-    def solve(self) -> None:
+    def solve_multi_objective(self) -> None:
         """
         Solve main problem with objective 0 as main objective and others as
         epsilon-constraints.

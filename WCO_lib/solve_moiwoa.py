@@ -112,7 +112,7 @@ def MOIWOA(initial_seeds: list,
         for seed, fitness in zip(current_seeds, current_fitness_values):
             n_children = compute_n_seeds(fitness, min_fitness, max_fitness, S_min, S_max)
 
-            # TODO: distribute children seeds and add them to new_seeds,
+            # TODO: distribute children seeds and add them to new_seeds
 
         # compute objectives and fitness values for children seeds
         new_fitness_values = []

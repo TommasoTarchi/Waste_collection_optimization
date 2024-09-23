@@ -46,7 +46,9 @@
   nodo (perché il viaggio può partire e finire in quei nodi -  ci dovrebbero pensare i constraint
   (16) e (17) ai nodi di partenza e arrivo).
 - Spiegare come si sono generati i valori di c, in particilare come si è formato il connected
-  graph.
+  graph (usando networkx).
+- Far notare come si è gestito il constraint (13) nel modello esatto (usando il lazy constraint
+  solo sugli edge rilevanti).
 
 - Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
   le objective functions del primo e del secondo o del secondo e del primo.

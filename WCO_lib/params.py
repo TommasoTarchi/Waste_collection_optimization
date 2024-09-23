@@ -134,8 +134,6 @@ class ProblemParams:
         self.cv = np.load(cv_path)
         self.G = np.load(G_path)
 
-        print(f"Shape of d from class: {self.d.shape}")
-
         # compute existing edges coordinates (list of tuples)
         existing_coord = []
         for i in range(self.num_nodes):

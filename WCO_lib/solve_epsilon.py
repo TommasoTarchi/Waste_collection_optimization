@@ -1,6 +1,6 @@
-import gurobipy as gb
 import numpy as np
 from itertools import product
+from typing import List
 
 from .params import ProblemParams
 from .models_exact import (SingleObjectModel0,
@@ -24,7 +24,8 @@ class EpsilonSolver:
         self.problem_params = problem_params
         self.objectives = None
         self.epsilon_values = None
-        self.final_solutions = None
+        self.pareto_solutions = None
+        self.model_status = None
 
     def solve_single_objectives(self) -> None:
         """
@@ -48,16 +49,16 @@ class EpsilonSolver:
         model3.solve()
 
         # check models' status
-        if model0.return_status() == gb.GRB.OPTIMAL:
+        if model0.return_status() == "2":
             print("\nWARNING: single-objective model with objective 0 was not solved optimally.\n")
 
-        if model1.return_status() == gb.GRB.OPTIMAL:
+        if model1.return_status() == "2":
             print("\nWARNING: single-objective model with objective 1 was not solved optimally.\n")
 
-        if model2.return_status() == gb.GRB.OPTIMAL:
+        if model2.return_status() == "2":
             print("\nWARNING: single-objective model with objective 2 was not solved optimally.\n")
 
-        if model3.return_status() == gb.GRB.OPTIMAL:
+        if model3.return_status() == "2":
             print("\nWARNING: single-objective model with objective 3 was not solved optimally.\n")
 
         # get best solutions
@@ -132,10 +133,42 @@ class EpsilonSolver:
         if self.epsilon_values is None:
             raise ValueError("Epsilon values must be computed first. Please run 'compute_epsilon' method first.")
 
+        print()
+        print(f"--------------------> {self.epsilon_values}")
+        print()
+
         # solve main model for all combinations of epsilon values
         pareto_solutions = []
+        model_status = []
         for epsilons in self.epsilon_values:
             model = SingleObjectModelMain(self.problem_params, epsilons[0], epsilons[1], epsilons[2])
             model.set_up_model()
             model.solve()
             pareto_solutions.append(model.return_best_solution())
+            model_status.append(model.return_status())
+
+            model.return_slack()
+
+        # save Pareto solutions
+        self.pareto_solutions = pareto_solutions
+
+        # save status of the model
+        self.model_status = model_status
+
+    def return_pareto_solutions(self) -> List:
+        """
+        Return pareto solutions.
+        """
+        if self.pareto_solutions is None:
+            raise ValueError("Pareto solutions must be computed first. Please run 'solve_multi_objective' method first.")
+
+        return self.pareto_solutions
+
+    def return_status(self) -> List:
+        """
+        Return status of the final models.
+        """
+        if self.model_status is None:
+            raise ValueError("Status of the model must be computed first. Please run 'solve_multi_objective' method first.")
+
+        return self.model_status

@@ -1,5 +1,6 @@
 import sys
 import os
+import numpy as np
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if library_path not in sys.path:
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     print("Parameters loaded.\n")
 
     # set number of epsilon values for epsilon-solver
-    num_epsilon = 4
+    num_epsilon = 2
 
     # set problem
     solver = EpsilonSolver(params)
@@ -55,3 +56,21 @@ if __name__ == "__main__":
     solver.solve_multi_objective()
 
     print("Problem solved.\n")
+
+    # print results
+    print("Status of the model: ", solver.return_status())
+    print()
+
+    pareto_solutions = solver.return_pareto_solutions()
+
+    print("Pareto solutions:\n")
+    for solution in pareto_solutions:
+        print("Number of non-null x: ", np.sum(solution["x"] > 0))
+        print("Number of elements x equal to one: ", np.sum(solution["x"] == 1))
+        for t in range(params.num_periods):
+            print(f"\tNumber of non-null y in period {t}: ", np.sum(solution["y"][:, :, t, :] > 0))
+            print(f"\tNumber of elements y equal to one in period {t}: ", np.sum(solution["y"][:, :, t, :] == 1))
+            for p in range(params.num_required_edges):
+                print(f"\t\tNumber of non-null x in trip {p}: ", np.sum(solution["x"][:, p, t, :] > 0))
+                print(f"\t\tNumber of non-null y in trip {p}: ", np.sum(solution["y"][:, p, t, :] > 0))
+        print()

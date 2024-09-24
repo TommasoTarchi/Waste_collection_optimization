@@ -4,11 +4,11 @@
   "num_required_edges": 9,
   "num_vehicles": 3,
   "num_periods": 2,
-  "W": 100,
-  "T_max": 100,
+  "W": 40,
+  "T_max": 20,
   "M": 10000,
   "theta": 4,
-  "sigma": 5,
+  "sigma": 7,
   "ul": 6,
   "uu": 7
 }

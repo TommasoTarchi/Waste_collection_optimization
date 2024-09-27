@@ -19,6 +19,7 @@ if __name__ == "__main__":
     bounds_t = (1, 5)
     bounds_cv = (1, 10)
     bounds_G = (1, 4)
+    T_max = 100
 
     # generate dataset
     generate_dataset(data_dir, bounds_c, bounds_d, bounds_t, bounds_cv, bounds_G)

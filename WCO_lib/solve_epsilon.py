@@ -133,10 +133,6 @@ class EpsilonSolver:
         if self.epsilon_values is None:
             raise ValueError("Epsilon values must be computed first. Please run 'compute_epsilon' method first.")
 
-        print()
-        print(f"--------------------> {self.epsilon_values}")
-        print()
-
         # solve main model for all combinations of epsilon values
         pareto_solutions = []
         model_status = []

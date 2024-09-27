@@ -1,8 +1,109 @@
 import json
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Dict
 import networkx as nx
 import random
+
+
+def compute_good_parameters(num_edges: int,
+                            num_required_edges: int,
+                            num_vehicles: int,
+                            max_d: float,
+                            max_t: float,
+                            avg_cv: float,
+                            avg_c: float) -> Dict:
+    """
+    Function to compute good parameters for the dataset generation, given the problem size,
+    in a deterministic way (ideal for scalability study).
+
+    Computed parameters:
+    - T_max: computed in such a way that total work time of a vehicle is 'sufficiently'
+      smaller
+    - ul, uu: computed in such a way that bound (12) of paper can be easily satisfied
+    - W: computed in such a way that bound (7) of paper can be easily satisfied
+    - theta: computed in such a way that the two terms of the main objective function are
+      about the same order of magnitude
+    """
+    good_params = {}
+
+    # estimate P as 0.4 of number of required edges
+    P = 0.1 * num_required_edges
+
+    # compute good T_max
+    reference_T_max = 1.2 * P * num_edges * max_t / num_vehicles
+    good_params["T_max"] = 0.7 * reference_T_max
+
+    # compute good ul and uu
+    max_ul_plus_uu = (reference_T_max * num_vehicles - P * num_edges * max_t) / (num_required_edges * max_d)
+    ul_plus_uu = 0.8 * max_ul_plus_uu
+    good_params["ul"] = 0.6 * ul_plus_uu
+    good_params["uu"] = 0.4 * ul_plus_uu
+
+    # compute good W
+    max_W = num_required_edges * max_d / num_vehicles
+    good_params["W"] = 0.5 * max_W
+
+    # compute good theta
+    good_params["theta"] = avg_cv / (num_edges * avg_c)
+
+    return good_params
+
+
+def compute_good_parameters_random(num_edges: int,
+                                   num_required_edges: int,
+                                   num_vehicles: int,
+                                   max_d: float,
+                                   max_t: float,
+                                   avg_cv: float,
+                                   avg_c: float) -> Dict:
+    """
+    Function to compute good parameters for the dataset generation, given the problem size,
+    with randomness.
+
+    Computed parameters:
+    - T_max: computed in such a way that total work time of a vehicle is 'sufficiently'
+      smaller
+    - ul, uu: computed in such a way that bound (12) of paper can be easily satisfied
+    - W: computed in such a way that bound (7) of paper can be easily satisfied
+    - theta: computed in such a way that the two terms of the main objective function are
+      about the same order of magnitude
+    """
+    good_params = {}
+
+    # estimate P as 0.4 of number of required edges
+    P = 0.1 * num_required_edges
+
+    # compute good T_max
+    max_T_max = 1.2 * P * num_edges * max_t / num_vehicles
+    bound_T_max_inf = 0.9 * max_T_max
+    bound_T_max_sup = max_T_max
+    reference_T_max = random.uniform(bound_T_max_inf, bound_T_max_sup)
+    good_T_max = random.uniform(0.8 * reference_T_max, 1.2 * reference_T_max)
+    good_params["T_max"] = good_T_max
+
+    # compute good ul and uu
+    max_ul_plus_uu = (reference_T_max * num_vehicles - P * num_edges * max_t) / (num_required_edges * max_d)
+    bound_ul_plus_uu_inf = 0.7 * max_ul_plus_uu
+    bound_ul_plus_uu_sup = 0.9 * max_ul_plus_uu
+    ul_plus_uu = random.uniform(bound_ul_plus_uu_inf, bound_ul_plus_uu_sup)
+    good_ul = random.uniform(0.4 * ul_plus_uu, 0.6 * ul_plus_uu)
+    good_uu = ul_plus_uu - good_ul
+    good_params["ul"] = good_ul
+    good_params["uu"] = good_uu
+
+    # compute good W
+    max_W = num_required_edges * max_d / num_vehicles
+    bound_W_inf = 0.5 * max_W
+    bound_W_sup = 0.7 * max_W
+    good_params["W"] = random.uniform(bound_W_inf, bound_W_sup)
+
+    # compute good theta
+    avg_theta = avg_cv / (num_edges * avg_c)
+    bound_theta_inf = 0.5 * avg_theta
+    bound_theta_sup = 2 * avg_theta
+    good_params["theta"] = random.uniform(bound_theta_inf, bound_theta_sup)
+
+    return good_params
 
 
 def generate_c(num_vertices: int,

@@ -1,115 +1,8 @@
 import gurobipy as gb
 import numpy as np
-import itertools
-from typing import Tuple
 
 from .params import ProblemParams
-
-
-def find_all_subsets(edge_list) -> Tuple:
-    """
-    Function to find all subsets of the set of all edges.
-    Also returns the list of indices of vertices in and not in each subset.
-    """
-    subsets = []  # list of subsets
-    vertices = []  # list of vertices in subsets
-    vertices_not = []  # list of vertices not in subsets
-
-    # find all subsets with corresponding indices
-    for num_edges in range(1, len(edge_list) + 1):
-        sub = itertools.combinations(edge_list, num_edges)
-        for edge_set in sub:
-            subsets.append(edge_set)
-            vertices.append([])
-            for edge in list(edge_set):
-                if not edge[0] in vertices[-1]:
-                    vertices[-1].append(edge[0])
-                if not edge[1] in vertices[-1]:
-                    vertices[-1].append(edge[1])
-
-    # find all vertices
-    all_vertices = []
-    for edge in edge_list:
-        if not edge[0] in all_vertices:
-            all_vertices.append(edge[0])
-        if not edge[1] in all_vertices:
-            all_vertices.append(edge[1])
-
-    # find indices not in subsets
-    for vertices_set in vertices:
-        vertices_not.append([vertex for vertex in all_vertices if vertex not in vertices_set])
-
-    return (subsets, vertices, vertices_not)
-
-
-# TODO: fix all
-class subtours_lazy_callback:
-    """
-    Callback class to apply subtours elimination lazy constraint to model.
-    """
-
-    def __init__(self, K, P, T, existing_edges, num_nodes, M, traversal_fraction_threshold, x):
-        # needed paramaters of the problem
-        self.K = K
-        self.P = P
-        self.T = T
-        self.existing_edges = existing_edges
-        self.num_nodes = num_nodes
-        self.M = M
-
-        # fraction threshold for number of traversals
-        self.traversal_fraction_threshold = traversal_fraction_threshold
-
-        # values of variable x
-        self.x = x
-
-    def __call__(self, model, where):
-        if where == gb.GRB.Callback.MIPSOL:
-            # get number of traversals
-            x_values = model.cbGetSolution(self.x)
-
-            for t in range(self.T):
-                for p in range(self.P):
-                    for k in range(self.K):
-                        # compute total and maximum number of traversals
-                        max_traversals = 0
-                        for (i, j) in self.existing_edges:
-                            if x_values[i, j, k, p, t] > max_traversals:
-                                max_traversals = x_values[i, j, k, p, t]
-
-                        # compute threshold for number of traversals
-                        traversal_threshold = self.traversal_fraction_threshold * max_traversals
-
-                        # find relevant edges
-                        relevant_edges = []
-                        for (i, j) in self.existing_edges:
-                            if x_values[i, j, k, p, t] > traversal_threshold:
-                                relevant_edges.append((i, j))
-
-                        # skip constraint if all edges have been traversed many times
-                        if len(relevant_edges) == len(self.existing_edges):
-                            continue
-
-                        if True:
-                            continue
-
-                        # find relevant subsets
-                        subsets, subsets_vertices, subsets_vertices_not = find_all_subsets(relevant_edges)
-
-                        # add constraints
-                        for idx in range(len(subsets)):
-                            # compute expressions
-                            left_hand_side = gb.LinExpr([(1.0, self.x[i, j, k, p, t])
-                                                         for (i, j) in subsets[idx]])
-                            right_hand_side = gb.LinExpr([(1.0, self.x[i, j, k, p, t])
-                                                          for (i, j) in self.existing_edges
-                                                          if i in subsets_vertices_not[idx]
-                                                          if j in subsets_vertices[idx]
-                                                          if not j == 0 and
-                                                          not j == self.num_nodes-1])
-
-                            # set constraint
-                            model.cbLazy(left_hand_side <= self.M * right_hand_side)
+from .subtours import add_subtours_constraint
 
 
 class BaseModel:
@@ -228,7 +121,7 @@ class BaseModel:
         # set model constraints
         #
         # (reference numbers are the same as in the original paper)
-        # (constraint (13) is added as a lazy constraint for efficiency reasons)
+        # (constraint (13) is added after first optimization (only if needed) for efficiency reasons)
         # (constraints (20) and (21) are already included inside the definition of the variables)
 
         # constraint (5)
@@ -273,7 +166,7 @@ class BaseModel:
                                    for p in range(P)])
 
                 # add constraint
-                self.model.addConstr(lin_expr == 1, name=f"sum of y for edge ({i}, {j}) in period {t}")
+                self.model.addConstr(lin_expr == 1, name=f"constraint (6) for edge ({i}, {j}) in period {t}")
 
         # precompute linear expression for scalar product between d and y
         dy_linear = np.empty((K, P, T), dtype=gb.LinExpr)
@@ -326,7 +219,8 @@ class BaseModel:
                 self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
                                                  if i == 0) >=
                                      gb.quicksum(self.x[i, j, k, 1, t] for (i, j) in self.problem_params.existing_edges
-                                                 if i == V-1))
+                                                 if i == V-1),
+                                     name=f"constraint (14) for period {t} and vehicle {k}")
 
         # constraint (15)
         for t in range(T):
@@ -339,18 +233,19 @@ class BaseModel:
                                                   if i == V-1])
                 # set constraints
                 for p in range(1, P-1):
-                    self.model.addConstr(sum_x_linear[p] >= sum_x_linear[p+1])
+                    self.model.addConstr(sum_x_linear[p] >= sum_x_linear[p+1],
+                                         name=f"constraint (15) in period {t} and vehicle {k} for trip {p}")
 
         # constraint (16)
         for t in range(T):
             for k in range(K):
-                self.model.addConstr(gb.quicksum(self.x[i, j, k, 1, t] for (i, j) in self.problem_params.existing_edges
+                self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
                                                  if i == 0 and j in range(1, V-1)) == self.u[k, t])
 
         # constraints (17)
         for t in range(T):
             for k in range(K):
-                self.model.addConstr(gb.quicksum(self.x[i, j, k, 1, t] for (i, j) in self.problem_params.existing_edges
+                self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
                                                  if i in range(1, V-1) and j == V-1) == self.u[k, t])
 
         # constraint (18)
@@ -367,27 +262,29 @@ class BaseModel:
                     self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
                                                      if i in range(1, V-1) and j == V-1) <= self.u[k, t])
 
-    # TODO: add traversal_fraction_threshold as a parameter and
-    #       change method for callback (to avoid that for instance
-    #       a trip with all x=1 is considered a subtour)
+    # TODO: add thresholds for subtours constraint as parameters
     def solve(self) -> None:
         """
         Solve the model.
         """
-        # enable callback and define it
-        self.model.Params.LazyConstraints = 1
-        cb_lazy = subtours_lazy_callback(self.K,
-                                         self.P,
-                                         self.T,
-                                         self.problem_params.existing_edges,
-                                         self.problem_params.num_nodes,
-                                         self.problem_params.M,
-                                         0.8,
-                                         self.x)
+        # solve model a first time
+        self.model.optimize()
 
-        # optimize model with callback
-        self.model.optimize(cb_lazy)
-        #self.model.optimize()
+        # conditionally add subtours constraint
+        add_constr = add_subtours_constraint(self.model,
+                                             self.x,
+                                             self.problem_params.num_nodes,
+                                             self.problem_params.existing_edges,
+                                             self.K,
+                                             self.P,
+                                             self.T,
+                                             self.problem_params.M,
+                                             0.7,
+                                             6)
+
+        # if needed, optimize again with new constraint
+        if add_constr:
+            self.model.optimize()
 
         # get best solutions
         x_out = self.model.getAttr("x", self.x)
@@ -461,9 +358,20 @@ class BaseModel:
                     unique_required_edges.append((i, j))
 
             for (i, j) in unique_required_edges:
-                constr = self.model.getConstrByName(f"sum of y for edge ({i}, {j}) in period {t}")
+                constr = self.model.getConstrByName(f"constraint (6) for edge ({i}, {j}) in period {t}")
                 slack = constr.slack
                 print(f"Constraint {constr.ConstrName} has slack: {slack}")
+
+        for t in range(self.T):
+            for k in range(self.K):
+                constr = self.model.getConstrByName(f"constraint (14) for period {t} and vehicle {k}")
+                slack = constr.slack
+                print(f"Constraint {constr.ConstrName} has slack: {slack}")
+
+                for p in range(1, self.P-1):
+                    constr = self.model.getConstrByName(f"constraint (15) in period {t} and vehicle {k} for trip {p}")
+                    slack = constr.slack
+                    print(f"Constraint {constr.ConstrName} has slack: {slack}")
 
 
 class SingleObjectModel0(BaseModel):
@@ -639,22 +547,6 @@ class SingleObjectModelMain(SingleObjectModel0):
         lin_expr_part = gb.LinExpr([(1.0, self.WT[k, t]) for k in range(K) for t in range(T)])
         lin_expr = T * K - lin_expr_part / self.problem_params.T_max
         self.model.addConstr(lin_expr <= self.eps3)
-
-        # set model for minimization
-        self.model.modelSense = gb.GRB.MINIMIZE
-
-        # build objective function
-        obj_function = self.problem_params.theta * gb.LinExpr([(self.problem_params.c[i, j], self.x[i, j, k, p, t])
-                                                               for t in range(T)
-                                                               for p in range(P)
-                                                               for k in range(K)
-                                                               for (i, j) in self.problem_params.existing_edges])
-
-        obj_function.addTerms([self.problem_params.cv[k] for k in range(K) for _ in range(T)],
-                              [self.u[k, t] for k in range(K) for t in range(T)])
-
-        # set objective function
-        self.model.setObjective(obj_function)
 
 
 def compute_objective0(theta: float,

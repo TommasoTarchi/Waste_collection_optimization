@@ -49,6 +49,16 @@
   graph (usando networkx).
 - Far notare come si è gestito il constraint (13) nel modello esatto (usando il lazy constraint
   solo sugli edge rilevanti).
+- Far notare come si sono scelti i parametri del problema date le dimensioni di un problema
+  (scrivere anche equazioni usate nello script).
+- Far notare che il numero di epoche è ciò che rende l'ottimizzazione più onerosa computazionalmente,
+  quindi per la scalabilità si è considerato il caso con T=1 fisso, e poi a parte il caso in cui T
+  aumenta.
+- Far notare che il tempo impiegato dall'ottimizzazione esatta dipende moltissimo dalla scelta dei
+  parametri iniziali. Perciò per la scalabilità si è scelto di calcolare i parametri iniziali usando
+  compute_good_parameters (senza "_random") per tutti i dataset, in modo da avere un minimo di
+  senso nella scalabilità (anche perché non è chiaro come incrementare la dimensione del problema,
+  visti i molti parametri).
 
 - Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
   le objective functions del primo e del secondo o del secondo e del primo.

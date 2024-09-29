@@ -20,7 +20,11 @@ def compute_fitness(objectives: np.ndarray, avg_objectives: np.ndarray) -> np.fl
     return fitness
 
 
-def compute_n_seeds(fitness: float, min_fitness: float, max_fitness: float, S_min: float, S_max: float) -> int:
+def compute_n_seeds(fitness: float,
+                    min_fitness: float,
+                    max_fitness: float,
+                    S_min: float,
+                    S_max: float) -> int:
     """
     Compute the number of seeds for a solution.
     """
@@ -112,7 +116,7 @@ def MOIWOA(initial_seeds: list,
         for seed, fitness in zip(current_seeds, current_fitness_values):
             n_children = compute_n_seeds(fitness, min_fitness, max_fitness, S_min, S_max)
 
-            # TODO: distribute children seeds and add them to new_seeds
+            # TODO: produce children seeds and add them to new_seeds
 
         # compute objectives and fitness values for children seeds
         new_fitness_values = []

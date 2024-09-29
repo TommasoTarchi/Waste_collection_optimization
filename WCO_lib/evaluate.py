@@ -7,7 +7,10 @@ from .models_exact import (compute_objective0,
                            compute_objective3)
 
 
-def compute_MID(params: ProblemParams,
+# TODO: controllare tutte le funzioni
+
+
+def compute_normalized_MID(params: ProblemParams,
                 solutions: list) -> float:
     """
     Function to compute mean of ideal distance (MID) of a set of solutions.
@@ -35,13 +38,21 @@ def compute_MID(params: ProblemParams,
                                   params.num_periods,
                                   WT)
 
-        # add to MID
-        MID += sqrt(obj0 ** 2 + obj1 ** 2 + obj2 ** 2 + obj3 ** 2)
+        # compute maximum value for rescaling
+        max_obj = max(obj0,
+                      obj1,
+                      params.sigma * params.num_vehicles * params.num_periods - obj2,
+                      obj3)
 
-    return MID / NOS
+        # add minimization objectives to MID
+        MID += (obj0 / max_obj) ** 2 + (obj1 / max_obj) ** 2 + (obj3 / max_obj) ** 2
+
+        # add maximization objective to MID
+        MID += ((params.sigma * params.num_vehicles * params.num_periods - obj2) / max_obj) ** 2
+
+    return sqrt(MID) / NOS
 
 
-# TODO: controllare
 def compute_RASO(params: ProblemParams,
                  solutions: list) -> float:
     """
@@ -62,8 +73,10 @@ def compute_RASO(params: ProblemParams,
                            compute_objective1(params.G,
                                               params.existing_edges,
                                               solution["x"]),
-                           compute_objective2(params.sigma,
-                                              solution["u"]),
+                           1 + params.sigma * params.num_vehicles * params.num_periods - compute_objective2(
+                               params.sigma,
+                               solution["u"],
+                               ),
                            compute_objective3(params.T_max,
                                               params.num_vehicles,
                                               params.num_periods,
@@ -77,7 +90,6 @@ def compute_RASO(params: ProblemParams,
     return RASO / NOS
 
 
-# TODO: controllare
 def compute_distance(params: ProblemParams,
                      solutions: list) -> float:
     """
@@ -110,10 +122,5 @@ def compute_distance(params: ProblemParams,
     D += (max(obj1) - min(obj1)) ** 2
     D += (max(obj2) - min(obj2)) ** 2
     D += (max(obj3) - min(obj3)) ** 2
-
-    print(min(obj0), max(obj0))
-    print(min(obj1), max(obj1))
-    print(min(obj2), max(obj2))
-    print(min(obj3), max(obj3))
 
     return sqrt(D)

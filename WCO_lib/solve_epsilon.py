@@ -67,7 +67,8 @@ class EpsilonSolver:
                      model2.return_best_solution(),
                      model3.return_best_solution()]
 
-        # compute objective functions for all models
+        # compute objective functions for all models (the one corresponding
+        # the model optimizing the objective is excluded)
         objectives0 = []
         for i in range(4):
             objectives0.append(compute_objective0(self.problem_params.theta,
@@ -76,17 +77,20 @@ class EpsilonSolver:
                                                   self.problem_params.existing_edges,
                                                   solutions[i]["x"],
                                                   solutions[i]["u"]))
+        objectives0.pop(0)
 
         objectives1 = []
         for i in range(4):
             objectives1.append(compute_objective1(self.problem_params.G,
                                                   self.problem_params.existing_edges,
                                                   solutions[i]["x"]))
+        objectives1.pop(1)
 
         objectives2 = []
         for i in range(4):
             objectives2.append(compute_objective2(self.problem_params.sigma,
                                                   solutions[i]["u"]))
+        objectives2.pop(2)
 
         objectives3 = []
         for i in range(4):
@@ -94,8 +98,9 @@ class EpsilonSolver:
                                                   self.problem_params.num_vehicles,
                                                   self.problem_params.num_periods,
                                                   solutions[i]["WT"]))
+        objectives3.pop(3)
 
-        # save objectives
+        # save computed objectives
         self.objectives = [objectives0, objectives1, objectives2, objectives3]
 
     def compute_epsilon(self, num_epsilon: int) -> None:
@@ -111,13 +116,14 @@ class EpsilonSolver:
 
         # compute epsilon values
         epsilons = []
-        for i in (1, 3):
-            objectives = self.objectives[i]
-            objectives.sort()
-            epsilons.append(np.linspace(objectives[0], objectives[1], num=num_epsilon))
-        objectives = self.objectives[2]
-        objectives.sort(reverse=True)
-        epsilons.append(np.linspace(objectives[1], objectives[0], num=num_epsilon))
+        for i in range(1, 4):
+            ordered_objectives = np.unique(self.objectives[i])
+            worst_best_dist = ordered_objectives[-1] - ordered_objectives[0]
+            epsilon_inf = ordered_objectives[0] + 0.25 * worst_best_dist
+            epsilon_sup = ordered_objectives[0] + 0.75 * worst_best_dist
+            if i == 2:
+                epsilon_inf, epsilon_sup = epsilon_sup, epsilon_inf
+            epsilons.append(np.unique(np.linspace(epsilon_inf, epsilon_sup, num=num_epsilon)))
 
         # combine epsilon values
         self.epsilon_values = list(product(*epsilons))
@@ -143,7 +149,7 @@ class EpsilonSolver:
             pareto_solutions.append(model.return_best_solution())
             model_status.append(model.return_status())
 
-            model.return_slack()
+            model.return_slack()  # TODO: togliere questa riga
 
         # save Pareto solutions
         self.pareto_solutions = pareto_solutions

@@ -59,6 +59,11 @@
   compute_good_parameters (senza "_random") per tutti i dataset, in modo da avere un minimo di
   senso nella scalabilità (anche perché non è chiaro come incrementare la dimensione del problema,
   visti i molti parametri).
+- Far notare che i valori di epsilon si sono calcolati prendendo l'intervallo tra il best e il worst
+  objective ma solo il sottointervallo tra 0.25 e 0.75. Far notare anche che l'oggetto calcolato con
+  i risultati del modello stesso che lo ottimizzava è stato escluso.
+- Far notare che le formule per MID e RASO del paper sono dovute essere corrette perché uno degli
+  objective è massimizzato. Far notare che si è anche normalizzato MID.
 
 - Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
   le objective functions del primo e del secondo o del secondo e del primo.

@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if library_path not in sys.path:
@@ -10,14 +11,12 @@ from WCO_lib.dataset import compute_good_parameters
 
 if __name__ == "__main__":
 
-    # set data path
-    data_dir = "./data/"
-
-    # set problem size
-    num_nodes = 10
-    num_edges = 18
-    num_required_edges = 13
-    num_vehicles = 3
+    # read problem size from json
+    with open('./data/problem_parameters.json') as f:
+        data = json.load(f)
+        num_edges = data['num_edges']
+        num_required_edges = data['num_required_edges']
+        num_vehicles = data['num_vehicles']
 
     # set bounds for dataset
     bounds_c = (1, 3)

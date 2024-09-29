@@ -1,14 +1,14 @@
 {
-  "num_nodes": 10,
-  "num_edges": 18,
-  "num_required_edges": 13,
+  "num_nodes": 8,
+  "num_edges": 14,
+  "num_required_edges": 9,
   "num_periods": 1,
-  "num_vehicles": 3,
-  "W": 6.5,
-  "T_max": 20,
+  "num_vehicles": 2,
+  "W": 6.75,
+  "T_max": 47.6,
   "M": 10000,
-  "theta": 0.055,
-  "sigma": 100,
-  "ul": 0.17,
-  "uu": 0.12
+  "theta": 0.0714,
+  "sigma": 10,
+  "ul": 0.403,
+  "uu": 0.269
 }

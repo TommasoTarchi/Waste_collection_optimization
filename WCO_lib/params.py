@@ -48,7 +48,10 @@ def check_MosaMoiwoaSolverParams(params):
     assert params.MOIWOA_S_min < params.MOIWOA_S_max, "Minimum number of children seeds must be less than maximum number."
 
 
-def compute_service_time(edge_demand, edge_traversing_time, ul, uu):
+def compute_service_time(edge_demand: float,
+                         edge_traversing_time: float,
+                         ul: float,
+                         uu: float) -> float:
     """
     Compute the service time of a vehicle for a given edge traversed.
     """
@@ -57,7 +60,7 @@ def compute_service_time(edge_demand, edge_traversing_time, ul, uu):
     return service_time
 
 
-def update_capacity(current_capacity, edge_demand):
+def update_capacity(current_capacity: float, edge_demand: float) -> float:
     """
     Update the capacity of a vehicle based on last edge traversed.
     """
@@ -322,12 +325,9 @@ class SinglePeriodVectorSolution:
         """
         Initialize the solution with a heuristic.
         """
-        # compute number of required edges for this period
-        num_required_edges = np.sum(problem_params.d > 0)
-
         # initialize first and second part
-        self.first_part = np.full(num_required_edges, -1)
-        self.second_part = np.full(num_required_edges, -1)
+        self.first_part = np.full(problem_params.num_required_edges, -1)
+        self.second_part = np.full(problem_params.num_required_edges, -1)
 
         # initialize auxiliary variables
         service_times = np.zeros(problem_params.num_vehicles)

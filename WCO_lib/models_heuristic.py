@@ -44,7 +44,10 @@ def geometric_cooling(T: float, alpha: float) -> float:
     return T_new
 
 
-def acceptance_probability(current_objective_functions: np.ndarray, ngbr_objective_functions: np.ndarray, T: float, K: float) -> float:
+def acceptance_probability(current_objective_functions: np.ndarray,
+                           ngbr_objective_functions: np.ndarray,
+                           T: float,
+                           K: float) -> float:
     """
     Compute the acceptance probability for a non-dominant neighbor solution.
     """
@@ -83,7 +86,6 @@ def MOSA(initial_solution: list,
     n_iter = 0  # number of iterations
     non_improving_iter = 0  # number of non-improving iterations
     while n_iter < max_iter and non_improving_iter < max_non_improving_iter:
-
         ngbr_solution = []
 
         # generate neighbor solution

@@ -16,6 +16,9 @@ def compute_good_parameters(num_edges: int,
     Function to compute good parameters for the dataset generation, given the problem size,
     in a deterministic way (ideal for scalability study).
 
+    By 'good' we mean parameters that will likely produce a feasible but not trivial instance
+    of the problem.
+
     Computed parameters:
     - T_max: computed in such a way that total work time of a vehicle is 'sufficiently'
       smaller
@@ -26,8 +29,8 @@ def compute_good_parameters(num_edges: int,
     """
     good_params = {}
 
-    # estimate P as 0.4 of number of required edges
-    P = 0.1 * num_required_edges
+    # estimate P as 0.3 of number of required edges
+    P = 0.3 * num_required_edges
 
     # compute good T_max
     reference_T_max = 1.2 * P * num_edges * max_t / num_vehicles
@@ -59,6 +62,9 @@ def compute_good_parameters_random(num_edges: int,
     """
     Function to compute good parameters for the dataset generation, given the problem size,
     with randomness.
+
+    By 'good' we mean parameters that will likely produce a feasible but not trivial instance
+    of the problem.
 
     Computed parameters:
     - T_max: computed in such a way that total work time of a vehicle is 'sufficiently'

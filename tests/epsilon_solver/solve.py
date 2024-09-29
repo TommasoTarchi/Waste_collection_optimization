@@ -9,10 +9,13 @@ if library_path not in sys.path:
 from WCO_lib.dataset import generate_dataset
 from WCO_lib.params import ProblemParams
 from WCO_lib.solve_epsilon import EpsilonSolver
-from WCO_lib.evaluate import compute_MID, compute_RASO, compute_distance
+from WCO_lib.evaluate import compute_normalized_MID, compute_RASO, compute_distance
 
 
 if __name__ == "__main__":
+
+    # set output file
+    output_file = "results.txt"
 
     # set data path
     data_dir = "./data/"
@@ -46,8 +49,6 @@ if __name__ == "__main__":
     # solve single-objective problems
     solver.solve_single_objectives()
 
-    print("Single-objective problems solved.\n")
-
     # compute epsilon values
     solver.compute_epsilon(num_epsilon)
 
@@ -61,23 +62,36 @@ if __name__ == "__main__":
     print("Problem solved.\n")
 
     # print results
-    print("STATUS OF THE MODELS: ", solver.return_status())
-    print()
+    with open(output_file, "w") as f:
+        f.write("PARAMETERS:\n")
+        f.write("Number of nodes: " + str(params.num_nodes) + "\n")
+        f.write("Number of edges: " + str(params.num_edges) + "\n")
+        f.write("Number of required edges: " + str(params.num_required_edges) + "\n")
+        f.write("Number of periods: " + str(params.num_periods) + "\n")
+        f.write("Number of vehicles: " + str(params.num_vehicles) + "\n")
+        f.write("W: " + str(params.W) + "\n")
+        f.write("T_max: " + str(params.T_max) + "\n")
+        f.write("M: " + str(params.M) + "\n")
+        f.write("theta: " + str(params.theta) + "\n")
+        f.write("sigma: " + str(params.sigma) + "\n")
+        f.write("ul: " + str(params.ul) + "\n")
+        f.write("uu: " + str(params.uu) + "\n")
 
-    print("PARETO SOLUTION SUMMARY:\n")
-    for solution in pareto_solutions:
-        print("Number of non-null x: ", np.sum(solution["x"] > 0))
-        print("Number of elements x equal to one: ", np.sum(solution["x"] == 1))
-        for t in range(params.num_periods):
-            print(f"\tNumber of employed vehicles in period {t}: ", np.sum(solution["u"][:, t] > 0))
-            print(f"\tNumber of non-null y in period {t}: ", np.sum(solution["y"][:, :, t, :] > 0))
-            print(f"\tNumber of elements y equal to one in period {t}: ", np.sum(solution["y"][:, :, t, :] == 1))
-            for k in range(params.num_vehicles):
-                for p in range(params.num_required_edges):
-                    print(f"\t\tNumber of non-null x for vehicle {k} in trip {p}: ", np.sum(solution["x"][k, p, t, :] > 0))
-                    print(f"\t\tNumber of non-null y for vehicle {k} in trip {p}: ", np.sum(solution["y"][k, p, t, :] > 0))
-        print()
+        f.write("\nSTATUS OF THE MODELS: " + str(solver.return_status()) + "\n")
 
-    print("MDI FOR PARETO SOLUTIONS: ", compute_MID(params, pareto_solutions))
-    print("RASO FOR PARETO SOLUTIONS: ", compute_RASO(params, pareto_solutions))
-    print("DISTANCE FOR PARETO SOLUTIONS: ", compute_distance(params, pareto_solutions))
+        f.write("\nPARETO SOLUTION SUMMARY:\n")
+        for solution in pareto_solutions:
+            f.write("Number of non-null x: " + str(np.sum(solution["x"] > 0)) + "\n")
+            f.write("Number of elements x equal to one: " + str(np.sum(solution["x"] == 1)) + "\n")
+            for t in range(params.num_periods):
+                f.write("\tNumber of employed vehicles in period " + str(t) + ": " + str(np.sum(solution["u"][:, t] > 0)) + "\n")
+                f.write("\tNumber of non-null y in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
+                f.write("\tNumber of elements y equal to one in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] == 1)) + "\n")
+                for k in range(params.num_vehicles):
+                    for p in range(params.num_required_edges):
+                        f.write("\t\tNumber of non-null x for vehicle " + str(k) + " in trip " + str(p) + ": " + str(np.sum(solution["x"][k, p, t, :] > 0)) + "\n")
+                        f.write("\t\tNumber of non-null y for vehicle " + str(k) + " in trip " + str(p) + ": " + str(np.sum(solution["y"][k, p, t, :] > 0)) + "\n")
+
+        f.write("\nNORMALIZED MID FOR PARETO SOLUTIONS: " + str(compute_normalized_MID(params, pareto_solutions)) + "\n")
+        f.write("\nRASO FOR PARETO SOLUTIONS: " + str(compute_RASO(params, pareto_solutions)) + "\n")
+        f.write("\nDISTANCE FOR PARETO SOLUTIONS: " + str(compute_distance(params, pareto_solutions)))

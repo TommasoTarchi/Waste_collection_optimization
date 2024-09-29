@@ -262,7 +262,6 @@ class BaseModel:
                     self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
                                                      if i in range(1, V-1) and j == V-1) <= self.u[k, t])
 
-    # TODO: add thresholds for subtours constraint as parameters
     def solve(self) -> None:
         """
         Solve the model.
@@ -413,7 +412,7 @@ class SingleObjectModel0(BaseModel):
 
 class SingleObjectModel1(BaseModel):
     """
-    Single-objective model for the problem with object Z_0 (Z_1 in the original
+    Single-objective model for the problem with object Z_1 (Z_2 in the original
     paper).
     """
 
@@ -447,7 +446,7 @@ class SingleObjectModel1(BaseModel):
 
 class SingleObjectModel2(BaseModel):
     """
-    Single-objective model for the problem with object Z_0 (Z_1 in the original
+    Single-objective model for the problem with object Z_2 (Z_3 in the original
     paper).
     """
 
@@ -478,7 +477,7 @@ class SingleObjectModel2(BaseModel):
 
 class SingleObjectModel3(BaseModel):
     """
-    Single-objective model for the problem with object Z_0 (Z_1 in the original
+    Single-objective model for the problem with object Z_3 (Z_4 in the original
     paper).
     """
 

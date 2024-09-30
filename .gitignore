@@ -1,3 +1,7 @@
+# data
+**/*.npy
+!tests/scripts_for_exam/data/**/*.npy
+
 # python cache
 **/__pycache__/
 

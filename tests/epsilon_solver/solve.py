@@ -77,27 +77,28 @@ if __name__ == "__main__":
         f.write("ul: " + str(params.ul) + "\n")
         f.write("uu: " + str(params.uu) + "\n")
 
-        f.write("\nALL EDGES: " + str(params.existing_edges) + "\n")
-        f.write("REQUIRED EDGES: " + str(params.required_edges) + "\n")
+        f.write("\nEDGES LIST: " + str(params.existing_edges) + "\n")
+        f.write("REQUIRED EDGES LIST: " + str(params.required_edges) + "\n")
 
-        f.write("\nSTATUS OF THE MODELS: " + str(solver.return_status()) + "\n")
+        f.write("\nSTATUS OF THE SOLVED MODELS: " + str(solver.return_status()) + "\n")
 
-        f.write("\nPARETO SOLUTION SUMMARY:\n")
+        f.write("\nEVALUATION METRICS:\n")
+        f.write("Normalized mid for pareto solutions: " + str(compute_normalized_MID(params, pareto_solutions)) + "\n")
+        f.write("Raso for pareto solutions: " + str(compute_RASO(params, pareto_solutions)) + "\n")
+        f.write("Distance for pareto solutions: " + str(compute_distance(params, pareto_solutions)) + "\n")
+
+        f.write("\nPARETO SOLUTIONS SUMMARY:\n")
+        solution_count = 0
         for solution in pareto_solutions:
-            f.write("Number of non-null x: " + str(np.sum(solution["x"] > 0)) + "\n")
-            f.write("Number of elements x equal to one: " + str(np.sum(solution["x"] == 1)) + "\n")
+            f.write("Solution " + str(solution_count) + ":\n")
             for t in range(params.num_periods):
                 f.write("\tNumber of employed vehicles in period " + str(t) + ": " + str(np.sum(solution["u"][:, t] > 0)) + "\n")
-                f.write("\tNumber of non-null y in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
-                f.write("\tNumber of elements y equal to one in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] == 1)) + "\n")
+                f.write("\tTotal number of traversings in period " + str(t) + ": " + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
+                f.write("\tTotal number of served edges in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
                 for k in range(params.num_vehicles):
-                    f.write("\t\tu: " + str(solution["u"][k, t]) + "\n")
+                    f.write("\tVehicle " + str(k) + ":\n")
                     for p in range(params.num_required_edges):
-                        f.write("\t\tNumber of non-null x for vehicle " + str(k) + " in trip " + str(p) + ": " + str(np.sum(solution["x"][k, p, t, :] > 0)) + "\n")
-                        f.write("\t\tNumber of non-null y for vehicle " + str(k) + " in trip " + str(p) + ": " + str(np.sum(solution["y"][k, p, t, :] > 0)) + "\n")
+                        f.write("\t\tTrip " + str(p) + ":\n")
                         f.write("\t\tx: " + str(solution["x"][k, p, t, :]) + "\n")
                         f.write("\t\ty: " + str(solution["y"][k, p, t, :]) + "\n")
-
-        f.write("\nNORMALIZED MID FOR PARETO SOLUTIONS: " + str(compute_normalized_MID(params, pareto_solutions)) + "\n")
-        f.write("\nRASO FOR PARETO SOLUTIONS: " + str(compute_RASO(params, pareto_solutions)) + "\n")
-        f.write("\nDISTANCE FOR PARETO SOLUTIONS: " + str(compute_distance(params, pareto_solutions)) + "\n")
+            solution_count += 1

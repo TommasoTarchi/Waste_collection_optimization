@@ -149,7 +149,7 @@ class EpsilonSolver:
             pareto_solutions.append(model.return_best_solution())
             model_status.append(model.return_status())
 
-            model.return_slack()  # TODO: togliere questa riga
+            #model.return_slack()  # TODO: togliere questa riga
 
         # save Pareto solutions
         self.pareto_solutions = pareto_solutions

@@ -5,6 +5,40 @@ from .params import ProblemParams
 from .subtours import add_subtours_constraint, add_subtours_constraint_all
 
 
+# TODO: togliere
+def debug_constraints_conflicts(model, x, y, T, P, K, required_edges):
+    # Step 1: Add slack variables to the y <= x constraint
+    slack_vars = model.addVars([(i, j, k, p, t) for t in range(T) for p in range(P) for k in range(K) 
+                                for (i, j) in required_edges[t]], vtype=gb.GRB.CONTINUOUS, name="slack")
+
+    model.addConstrs((y[i, j, k, p, t] <= x[i, j, k, p, t] + slack_vars[i, j, k, p, t]
+                      for t in range(T) for p in range(P) for k in range(K)
+                      for (i,j) in required_edges[t]), name="relaxed_y_x")
+
+    # Step 2: Modify objective to minimize slack
+    original_obj = model.getObjective()
+    model.setObjective(original_obj + slack_vars.sum())
+
+    # Step 3: Optimize and analyze
+    model.optimize()
+
+    if model.status == gb.GRB.OPTIMAL:
+        print("Model is feasible with relaxation. Analyzing slack variables:")
+        for (i, j, k, p, t), slack in slack_vars.items():
+            if slack.X > 1e-6:
+                print(f"Constraint for edge ({i},{j}), vehicle {k}, trip {p}, time {t} violated by {slack.X}")
+                print(f"  y value: {y[i,j,k,p,t].X}, x value: {x[i,j,k,p,t].X}")
+    else:
+        print("Model is still infeasible. Further investigation needed.")
+
+    # Step 4: Check for multi-traversal requirements
+    if model.status == gb.GRB.OPTIMAL:
+        print("\nChecking for edges requiring multiple traversals:")
+        for (i,j,k,p,t), var in x.items():
+            if var.X > 1 + 1e-6:
+                print(f"Edge ({i},{j}) requires {var.X} traversals by vehicle {k}, trip {p}, time {t}")
+
+
 class BaseModel:
     """
     Base class for setting variables and constraints of the model, and to retrieve
@@ -97,6 +131,12 @@ class BaseModel:
                                      lb=0.0,
                                      name="WT")
 
+        #u_add = self.model.addVars([(k, p, t) for t in range(T)
+        #                            for p in range(1, P)
+        #                            for k in range(K)],
+        #                           vtype=gb.GRB.BINARY,
+        #                           name="u_add")
+
         # set constraint for WT definition
         for k in range(K):
             for t in range(T):
@@ -161,12 +201,10 @@ class BaseModel:
 
             for (i, j) in unique_required_edges:
                 # compute linear expression
-                lin_expr = gb.LinExpr([(1.0, self.y[i, j, k, p, t]) for k in range(K)
-                                       for p in range(P)])
-                lin_expr.addTerms([1.0 for _ in range(K)
-                                   for _ in range(P)],
-                                  [self.y[j, i, k, p, t] for k in range(K)
-                                   for p in range(P)])
+                lin_expr = gb.quicksum(self.y[i, j, k, p, t] for k in range(K)
+                                       for p in range(P))
+                lin_expr += gb.quicksum(self.y[j, i, k, p, t] for k in range(K)
+                                        for p in range(P))
 
                 # add constraint
                 self.model.addConstr(lin_expr == 1, name=f"constraint (6) for edge ({i}, {j}) in period {t}")
@@ -270,7 +308,7 @@ class BaseModel:
             for p in range(1, P):
                 for k in range(K):
                     self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
-                                                     if i == V-1 and j in range(1, V-1)) <= self.u[k, t],
+                                                     if i == V-1 and j not in (0, V-1)) <= self.u[k, t],
                                          name=f"constraint (18) for period {t}, trip {p} and vehicle {k}")
 
         # constraint (19)
@@ -278,13 +316,48 @@ class BaseModel:
             for p in range(1, P):
                 for k in range(K):
                     self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
-                                                     if i in range(1, V-1) and j == V-1) <= self.u[k, t],
+                                                     if i not in (0, V-1) and j == V-1) <= self.u[k, t],
                                          name=f"constraint (19) for period {t}, trip {p} and vehicle {k}")
+
+        #for t in range(T):
+        #    for k in range(K):
+        #        self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
+        #                                         if i == 0 and j in range(1, V-1)) == self.u[k, t])
+        #
+        #for t in range(T):
+        #    for k in range(K):
+        #        self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
+        #                                         if i in range(1, V-1) and j == V-1) == self.u[k, t])
+        #
+        #for t in range(T):
+        #    for p in range(1, P):
+        #        for k in range(K):
+        #            self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
+        #                                             if i == V-1 and j not in (0, V-1)) == u_add[k, p, t])
+        #
+        #for t in range(T):
+        #    for p in range(1, P):
+        #        for k in range(K):
+        #            self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
+        #                                             if i not in (0, V-1) and j == V-1) == u_add[k, p, t])
+        #
+        #for t in range(T):
+        #    for k in range(K):
+        #        self.model.addConstr(self.u[k, t] >= u_add[k, 1, t])
+        #
+        #for t in range(T):
+        #    for k in range(K):
+        #        for p in range(1, P-1):
+        #            self.model.addConstr(u_add[k, p, t] >= u_add[k, p+1, t])
 
     def solve(self) -> None:
         """
         Solve the model.
         """
+
+        # TODO: togliere
+        #debug_constraints_conflicts(self.model, self.x, self.y, self.T, self.P, self.K, self.problem_params.required_edges)
+
         # optimize model
         self.model.optimize()
 

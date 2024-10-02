@@ -2,41 +2,7 @@ import gurobipy as gb
 import numpy as np
 
 from .params import ProblemParams
-from .subtours import add_subtours_constraint, add_subtours_constraint_all
-
-
-# TODO: togliere
-def debug_constraints_conflicts(model, x, y, T, P, K, required_edges):
-    # Step 1: Add slack variables to the y <= x constraint
-    slack_vars = model.addVars([(i, j, k, p, t) for t in range(T) for p in range(P) for k in range(K) 
-                                for (i, j) in required_edges[t]], vtype=gb.GRB.CONTINUOUS, name="slack")
-
-    model.addConstrs((y[i, j, k, p, t] <= x[i, j, k, p, t] + slack_vars[i, j, k, p, t]
-                      for t in range(T) for p in range(P) for k in range(K)
-                      for (i,j) in required_edges[t]), name="relaxed_y_x")
-
-    # Step 2: Modify objective to minimize slack
-    original_obj = model.getObjective()
-    model.setObjective(original_obj + slack_vars.sum())
-
-    # Step 3: Optimize and analyze
-    model.optimize()
-
-    if model.status == gb.GRB.OPTIMAL:
-        print("Model is feasible with relaxation. Analyzing slack variables:")
-        for (i, j, k, p, t), slack in slack_vars.items():
-            if slack.X > 1e-6:
-                print(f"Constraint for edge ({i},{j}), vehicle {k}, trip {p}, time {t} violated by {slack.X}")
-                print(f"  y value: {y[i,j,k,p,t].X}, x value: {x[i,j,k,p,t].X}")
-    else:
-        print("Model is still infeasible. Further investigation needed.")
-
-    # Step 4: Check for multi-traversal requirements
-    if model.status == gb.GRB.OPTIMAL:
-        print("\nChecking for edges requiring multiple traversals:")
-        for (i,j,k,p,t), var in x.items():
-            if var.X > 1 + 1e-6:
-                print(f"Edge ({i},{j}) requires {var.X} traversals by vehicle {k}, trip {p}, time {t}")
+from .subtours import add_subtours_constraint
 
 
 class BaseModel:
@@ -131,12 +97,6 @@ class BaseModel:
                                      lb=0.0,
                                      name="WT")
 
-        #u_add = self.model.addVars([(k, p, t) for t in range(T)
-        #                            for p in range(1, P)
-        #                            for k in range(K)],
-        #                           vtype=gb.GRB.BINARY,
-        #                           name="u_add")
-
         # set constraint for WT definition
         for k in range(K):
             for t in range(T):
@@ -164,9 +124,10 @@ class BaseModel:
         # (constraints (20) and (21) are already included inside the definition of the variables)
 
         # constraint (5)
-        # compute vertices touched by existing edges
+        # compute vertices touched by existing edges (with and without 0 and V-1)
         touched_vertices = []
         touched_vertices_no_origins = []
+
         for edge in self.problem_params.existing_edges:
             if not edge[0] in touched_vertices:
                 touched_vertices.append(edge[0])
@@ -180,11 +141,21 @@ class BaseModel:
         if V-1 in touched_vertices_no_origins:
             touched_vertices_no_origins.remove(V-1)
 
-        # add constraint
+        # add constraint for first trip
         for t in range(T):
-            for p in range(P):
+            for k in range(K):
+                for i in touched_vertices_no_origins:
+                    outgoing_edges = gb.LinExpr([(1.0, self.x[i, j, k, 0, t]) for j in touched_vertices
+                                                 if (i, j) in self.problem_params.existing_edges])
+                    incoming_edges = gb.LinExpr([(1.0, self.x[j, i, k, 0, t]) for j in touched_vertices
+                                                 if (j, i) in self.problem_params.existing_edges])
+                    self.model.addConstr(outgoing_edges == incoming_edges)
+
+        # add constraints for other trips
+        for t in range(T):
+            for p in range(1, P):
                 for k in range(K):
-                    for i in touched_vertices_no_origins:
+                    for i in touched_vertices:
                         outgoing_edges = gb.LinExpr([(1.0, self.x[i, j, k, p, t]) for j in touched_vertices
                                                      if (i, j) in self.problem_params.existing_edges])
                         incoming_edges = gb.LinExpr([(1.0, self.x[j, i, k, p, t]) for j in touched_vertices
@@ -254,16 +225,15 @@ class BaseModel:
                               for t in range(T)
                               for k in range(K))
 
-        # TODO: togliere violation
         # constraint (13)
-        self.violation = add_subtours_constraint_all(self.model,
-                                                     self.x,
-                                                     self.problem_params.num_nodes,
-                                                     self.problem_params.existing_edges,
-                                                     self.K,
-                                                     self.P,
-                                                     self.T,
-                                                     self.problem_params.M)
+        add_subtours_constraint(self.model,
+                                self.x,
+                                self.problem_params.num_nodes,
+                                self.problem_params.existing_edges,
+                                self.K,
+                                self.P,
+                                self.T,
+                                self.problem_params.M)
 
         # constraint (14)
         for t in range(T):
@@ -319,44 +289,10 @@ class BaseModel:
                                                      if i not in (0, V-1) and j == V-1) <= self.u[k, t],
                                          name=f"constraint (19) for period {t}, trip {p} and vehicle {k}")
 
-        #for t in range(T):
-        #    for k in range(K):
-        #        self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
-        #                                         if i == 0 and j in range(1, V-1)) == self.u[k, t])
-        #
-        #for t in range(T):
-        #    for k in range(K):
-        #        self.model.addConstr(gb.quicksum(self.x[i, j, k, 0, t] for (i, j) in self.problem_params.existing_edges
-        #                                         if i in range(1, V-1) and j == V-1) == self.u[k, t])
-        #
-        #for t in range(T):
-        #    for p in range(1, P):
-        #        for k in range(K):
-        #            self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
-        #                                             if i == V-1 and j not in (0, V-1)) == u_add[k, p, t])
-        #
-        #for t in range(T):
-        #    for p in range(1, P):
-        #        for k in range(K):
-        #            self.model.addConstr(gb.quicksum(self.x[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges
-        #                                             if i not in (0, V-1) and j == V-1) == u_add[k, p, t])
-        #
-        #for t in range(T):
-        #    for k in range(K):
-        #        self.model.addConstr(self.u[k, t] >= u_add[k, 1, t])
-        #
-        #for t in range(T):
-        #    for k in range(K):
-        #        for p in range(1, P-1):
-        #            self.model.addConstr(u_add[k, p, t] >= u_add[k, p+1, t])
-
     def solve(self) -> None:
         """
         Solve the model.
         """
-
-        # TODO: togliere
-        #debug_constraints_conflicts(self.model, self.x, self.y, self.T, self.P, self.K, self.problem_params.required_edges)
 
         # optimize model
         self.model.optimize()
@@ -497,9 +433,6 @@ class SingleObjectModel0(BaseModel):
         obj_function.addTerms([self.problem_params.cv[k] for k in range(K) for _ in range(T)],
                               [self.u[k, t] for k in range(K) for t in range(T)])
 
-        # TODO: togliere
-        #obj_function.addTerms(1000, self.violation)
-
         # set objective function
         self.model.setObjective(obj_function)
 
@@ -534,9 +467,6 @@ class SingleObjectModel1(BaseModel):
                                    for k in range(K)
                                    for (i, j) in self.problem_params.existing_edges])
 
-        # TODO: togliere
-        #obj_function.addTerms(1000, self.violation)
-
         # set objective function
         self.model.setObjective(obj_function)
 
@@ -568,9 +498,6 @@ class SingleObjectModel2(BaseModel):
                                    for t in range(T)
                                    for k in range(K)])
 
-        # TODO: togliere
-        #obj_function.addTerms(-1000, self.violation)
-
         # set objective function
         self.model.setObjective(obj_function)
 
@@ -601,9 +528,6 @@ class SingleObjectModel3(BaseModel):
         obj_function = gb.LinExpr([(1.0, self.WT[k, t]) for k in range(K) for t in range(T)])
 
         obj_function = T * K - obj_function / self.problem_params.T_max
-
-        # TODO: togliere
-        #obj_function.addTerms(1000, self.violation)
 
         # set objective function
         self.model.setObjective(obj_function)

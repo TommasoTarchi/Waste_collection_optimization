@@ -143,13 +143,15 @@ class EpsilonSolver:
         pareto_solutions = []
         model_status = []
         for epsilons in self.epsilon_values:
-            model = SingleObjectModelMain(self.problem_params, epsilons[0], epsilons[1], epsilons[2])
+            model = SingleObjectModelMain(self.problem_params,
+                                          epsilons[0],
+                                          epsilons[1],
+                                          epsilons[2])
             model.set_up_model()
             model.solve()
             pareto_solutions.append(model.return_best_solution())
             model_status.append(model.return_status())
-
-            #model.return_slack()  # TODO: togliere questa riga
+            #model.return_slack()  # FOR DEBUGGING
 
         # save Pareto solutions
         self.pareto_solutions = pareto_solutions

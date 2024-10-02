@@ -82,10 +82,10 @@ if __name__ == "__main__":
 
         f.write("\nSTATUS OF THE SOLVED MODELS: " + str(solver.return_status()) + "\n")
 
-        f.write("\nEVALUATION METRICS:\n")
-        f.write("Normalized mid for pareto solutions: " + str(compute_normalized_MID(params, pareto_solutions)) + "\n")
-        f.write("Raso for pareto solutions: " + str(compute_RASO(params, pareto_solutions)) + "\n")
-        f.write("Distance for pareto solutions: " + str(compute_distance(params, pareto_solutions)) + "\n")
+        #f.write("\nEVALUATION METRICS:\n")
+        #f.write("Normalized mid for pareto solutions: " + str(compute_normalized_MID(params, pareto_solutions)) + "\n")
+        #f.write("Raso for pareto solutions: " + str(compute_RASO(params, pareto_solutions)) + "\n")
+        #f.write("Distance for pareto solutions: " + str(compute_distance(params, pareto_solutions)) + "\n")
 
         f.write("\nPARETO SOLUTIONS SUMMARY:\n")
         solution_count = 0

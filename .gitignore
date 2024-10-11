@@ -2,6 +2,10 @@
 **/*.npy
 !tests/scripts_for_exam/data/**/*.npy
 
+# scripts to generate datasets for exam
+#tests/scripts_for_exam/generate_dataset.py
+#tests/scripts_for_exam/good_params.py
+
 # python cache
 **/__pycache__/
 

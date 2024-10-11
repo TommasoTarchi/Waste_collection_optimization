@@ -1,12 +1,13 @@
 import sys
 import os
 import numpy as np
+import argparse
+import time
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if library_path not in sys.path:
     sys.path.append(library_path)
 
-from WCO_lib.dataset import generate_dataset
 from WCO_lib.params import ProblemParams
 from WCO_lib.solve_epsilon import EpsilonSolver
 from WCO_lib.evaluate import compute_normalized_MID, compute_RASO, compute_distance
@@ -14,26 +15,19 @@ from WCO_lib.evaluate import compute_normalized_MID, compute_RASO, compute_dista
 
 if __name__ == "__main__":
 
+    # get number of epsilon values
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_epsilon", type=int, default=4)
+
+    args = parser.parse_args()
+
+    num_epsilon = args.num_epsilon
+
     # set output file
-    output_file = "results.txt"
+    output_file = "./results/test/results_epsilon.txt"
 
     # set data path
-    data_dir = "./data/"
-
-    # set bounds for dataset
-    bounds_c = (1, 3)
-    bounds_d = (1, 3)
-    bounds_t = (1, 3)
-    bounds_cv = (1, 3)
-    bounds_G = (1, 3)
-
-    # set number of epsilon values for epsilon-solver
-    num_epsilon = 4
-
-    # generate dataset
-    generate_dataset(data_dir, bounds_c, bounds_d, bounds_t, bounds_cv, bounds_G)
-
-    print("Dataset generated.\n")
+    data_dir = "./data/test/"
 
     # load problem parameters
     params = ProblemParams()
@@ -41,27 +35,42 @@ if __name__ == "__main__":
 
     print("Parameters loaded.\n")
 
-    # set problem
+    # set solver for problem
     solver = EpsilonSolver(params)
 
     print("Problem set.\n")
 
+    t0 = time.perf_counter()
+
     # solve single-objective problems
     solver.solve_single_objectives()
+
+    t1 = time.perf_counter()
 
     # compute epsilon values
     solver.compute_epsilon(num_epsilon)
 
+    t2 = time.perf_counter()
+
     print("Epsilon values for epsilon-solver computed.\n")
+
+    t3 = time.perf_counter()
 
     # solve multi-objective problem
     solver.solve_multi_objective()
+
+    t4 = time.perf_counter()
 
     pareto_solutions = solver.return_pareto_solutions()
 
     print("Problem solved.\n")
 
-    # print results
+    # compute profiling
+    time_single_obj = t1 - t0
+    time_comp_epsilon = t2 - t1
+    time_multi_obj = t4 - t3
+
+    # print results summary
     with open(output_file, "w") as f:
         f.write("PROBLEM PARAMETERS:\n")
         f.write("Number of nodes: " + str(params.num_nodes) + "\n")
@@ -76,6 +85,12 @@ if __name__ == "__main__":
         f.write("sigma: " + str(params.sigma) + "\n")
         f.write("ul: " + str(params.ul) + "\n")
         f.write("uu: " + str(params.uu) + "\n")
+
+        f.write("\nPROFILING:\n")
+        f.write("Time for single-objective problems resolution: " + str(time_single_obj) + " seconds\n")
+        f.write("Time for epsilon values computation: " + str(time_comp_epsilon) + " seconds\n")
+        f.write("Time for final model resolution: " + str(time_multi_obj) + " seconds\n")
+        f.write("Total time for rsolution: " + str(time_single_obj + time_comp_epsilon + time_multi_obj) + " seconds\n")
 
         f.write("\nEDGES LIST: " + str(params.existing_edges) + "\n")
         f.write("REQUIRED EDGES LIST: " + str(params.required_edges) + "\n")

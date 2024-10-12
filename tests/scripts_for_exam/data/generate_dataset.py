@@ -1,8 +1,17 @@
+#
+# This script can be used to generate a dataset given a set of parameters
+# written in a JSON file called 'problem_parameters.json' in the 'data_dir'
+# directory.
+#
+# The dataset will be generated in the 'data_dir' directory itself.
+#
+
+
 import sys
 import os
 import argparse
 
-library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 if library_path not in sys.path:
     sys.path.append(library_path)
 

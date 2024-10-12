@@ -1,9 +1,21 @@
+#
+# This script can be used to compute 'good' parameters, i.e. parameters
+# that will most likely generate a feasible but not trivial problem, for
+# a given problem size (i.e. num_nodes, num_edges, num_required_edges,
+# num_vehicles, num_periods).
+#
+# The good parameters will be written to a JSON file called 'problem_parameters.json'
+# in the 'data_dir' directory. This JSON can then be used to generate a dataset using
+# the script 'generate_dataset.py' in this directory.
+#
+
+
 import sys
 import os
 import json
 import argparse
 
-library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 if library_path not in sys.path:
     sys.path.append(library_path)
 

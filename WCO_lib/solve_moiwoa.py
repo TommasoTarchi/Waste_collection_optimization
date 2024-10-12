@@ -2,7 +2,7 @@ import numpy as np
 from deap import creator, base, tools
 
 from .params import ProblemParams, MosaMoiwoaSolverParams
-from .models_heuristic import generate_heuristic_solution, MOSA
+from .models_heuristic import SinglePeriodVectorSolution, generate_heuristic_solution, MOSA
 
 
 # create DEAP classes for non-dominated sorting
@@ -114,9 +114,26 @@ def MOIWOA(initial_seeds: list,
         # generate children seeds
         new_seeds = []
         for seed, fitness in zip(current_seeds, current_fitness_values):
+            # compute number of children seeds
             n_children = compute_n_seeds(fitness, min_fitness, max_fitness, S_min, S_max)
 
-            # TODO: produce children seeds and add them to new_seeds
+            for _ in range(n_children):
+                child_seed = []
+                for period_idx, period_solution in enumerate(seed):
+                    # copy parent period solution to child period solution
+                    child_period_solution = SinglePeriodVectorSolution(period_idx)
+                    child_period_solution.set_first_part(period_solution.first_part)
+                    child_period_solution.set_second_part(period_solution.second_part)
+                    child_period_solution.update_quantities(problem_params)
+
+                    while True:
+                        # mutate period solution
+                        child_period_solution.mutate(problem_params)
+
+                        # if period solution is feasible, add to child seed
+                        if child_period_solution.is_feasible(problem_params):
+                            child_seed.append(child_period_solution)
+                            break
 
         # compute objectives and fitness values for children seeds
         new_fitness_values = []

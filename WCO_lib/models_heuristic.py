@@ -2,20 +2,21 @@ import numpy as np
 import networkx as nx
 
 from .params import ProblemParams
+from .mutations import (edge_swap,
+                        trip_swap,
+                        trip_shuffle,
+                        trip_reverse,
+                        trip_combine)
 
 
-def find_shortest_path(graph: nx.Graph, start_edge: tuple, end_edge: tuple) -> list:
+def find_shortest_path(graph: nx.Graph, start: int, end: int) -> list:
     """
-    Find the shortest path between two edges in a graph.
+    Find the shortest path between two vertices in a graph.
     In particular, return the list of tuples representing the edges of the path from
     the end node of first edge to the start node of the second edge.
     """
-    # extract first and last nodes of the path
-    source = start_edge[1]
-    target = end_edge[0]
-
-    # find shorted path
-    node_path = nx.shortest_path(graph, source=source, target=target)
+    # find shortest path
+    node_path = nx.shortest_path(graph, source=start, target=end)
 
     # Convert the node path to an edge path
     edge_path = []
@@ -23,6 +24,27 @@ def find_shortest_path(graph: nx.Graph, start_edge: tuple, end_edge: tuple) -> l
         edge_path.append((node_path[i], node_path[i+1]))
 
     return edge_path
+
+
+def compute_service_time(edge_demand: float,
+                         edge_traversing_time: float,
+                         ul: float,
+                         uu: float) -> float:
+    """
+    Compute the service time of a vehicle for a given edge traversed.
+    """
+    service_time = edge_demand * (ul + uu) + edge_traversing_time
+
+    return service_time
+
+
+def update_capacity(current_capacity: float, edge_demand: float) -> float:
+    """
+    Update the capacity of a vehicle based on last edge traversed.
+    """
+    new_capacity = current_capacity - edge_demand
+
+    return new_capacity
 
 
 class SinglePeriodVectorSolution:
@@ -123,7 +145,7 @@ class SinglePeriodVectorSolution:
             next_end = np.random.choice(np.nonzero(next_start)[0])
 
             # compute service time for possible next position
-            next_service_time = problem_params.c[current_position, next_start]  # time to go to required edge
+            next_service_time = problem_params.t[current_position, next_start]  # time to go to required edge
             next_service_time += compute_service_time(problem_params.d[next_start, next_end],
                                                       problem_params.t[next_start, next_end],
                                                       problem_params.ul,
@@ -164,7 +186,7 @@ class SinglePeriodVectorSolution:
                 capacities[current_vehicle] = problem_params.W
                 positions[current_vehicle] = problem_params.num_nodes-1
                 traversals[current_position, problem_params.num_nodes-1] += 1
-                travelled_distance += problem_params.t[current_position, problem_params.num_nodes-1]
+                travelled_distance += problem_params.c[current_position, problem_params.num_nodes-1]
 
             # go back to depot
             else:
@@ -172,7 +194,7 @@ class SinglePeriodVectorSolution:
                 service_times[current_vehicle] = problem_params.t[problem_params.num_nodes-1, 0]
                 positions[current_vehicle] = 0
                 traversals[problem_params.num_nodes-1, 0] += 1
-                travelled_distance += problem_params.t[problem_params.num_nodes-1, 0]
+                travelled_distance += problem_params.c[problem_params.num_nodes-1, 0]
 
                 # select new vehicle among the available ones
                 current_vehicle = np.random.choice(np.where(available_vehicles)[0])
@@ -189,7 +211,7 @@ class SinglePeriodVectorSolution:
         self.traversals = traversals
         self.total_travelled_distance = travelled_distance
 
-    def update_quantities(self, problem_params: ProblemParams):
+    def update_quantities(self, problem_params: ProblemParams, G: nx.Graph):
         """
         Update the quantities of the solution.
         (To be used when the first and/or second part are changed).
@@ -200,15 +222,89 @@ class SinglePeriodVectorSolution:
         traversals = np.zeros_like(problem_params.c)
         travelled_distance = 0
         vehicle_employed = np.full(problem_params.num_vehicles, False)
+        positions = np.full(problem_params.num_vehicles, 0)
 
-        # build networkx graph
-        G = nx.Graph()
-        G.add_edges_from(problem_params.existing_edges[self.period])
-
-        # iterate over elements of the solution
+        # iterate over required edges in the solution
         for i in range(self.first_part.shape[0]):
-            # TODO
-            pass
+            # get required edge and vehicle
+            required_edge = problem_params.required_edges[self.first_part[i]]
+            vehicle = self.second_part[i]
+            required_start = required_edge[0]
+            required_end = required_edge[1]
+
+            # compute shortest path from current position to required edge
+            # (we have to choose in what direction to 'take' the edge)
+            shortest_path_tostart = find_shortest_path(G,
+                                                       positions[vehicle],
+                                                       required_start)
+            shortest_path_toend = find_shortest_path(G,
+                                                     positions[vehicle],
+                                                     required_end)
+
+            distance_tostart = np.sum([problem_params.c[shortest_path_tostart[j][0],
+                                                        shortest_path_tostart[j][1]]
+                                       for j in range(len(shortest_path_tostart))])
+            distance_toend = np.sum([problem_params.c[shortest_path_toend[j][0],
+                                                      shortest_path_toend[j][1]]
+                                     for j in range(len(shortest_path_toend))])
+
+            shortest_path = None
+            if distance_tostart < distance_toend:
+                shortest_path = shortest_path_tostart
+                travelled_distance += distance_tostart  # update travelled distance
+            else:
+                shortest_path = shortest_path_toend
+                travelled_distance += distance_toend  # update travelled distance
+                required_start, required_end = required_end, required_start  # swap start and end
+
+            # update remained quantities
+            service_times[vehicle] += np.sum([problem_params.t[shortest_path[j][0],
+                                                               shortest_path[j][1]]
+                                              for j in range(len(shortest_path))])
+            service_times[vehicle] += compute_service_time(problem_params.d[required_start,
+                                                                            required_end],
+                                                           problem_params.t[required_start,
+                                                                            required_end],
+                                                           problem_params.ul,
+                                                           problem_params.uu)
+
+            capacities[vehicle] = update_capacity(capacities[vehicle],
+                                                  problem_params.d[required_start, required_end])
+
+            for edge in shortest_path:
+                traversals[edge[0], edge[1]] += 1
+            traversals[required_start, required_end] += 1
+
+            travelled_distance += problem_params.c[required_start, required_end]
+
+            vehicle_employed[vehicle] = True
+
+            positions[vehicle] = required_end
+
+            # check if vehicle has to go back to disposal site
+            next_required_edge = problem_params.required_edges[self.first_part[i+1]]
+            if (i == self.first_part.shape[0]-1 or
+                self.second_part[i+1] != self.second_part[i] or
+                self.d[next_required_edge[0], next_required_edge[1]] > capacities[vehicle]):
+
+                # compute shortest path from current position to disposal site
+                shortest_path = find_shortest_path(G, positions[vehicle], problem_params.num_nodes-1)
+
+                # update quantities
+                service_times[vehicle] += np.sum([problem_params.t[shortest_path[j][0],
+                                                                   shortest_path[j][1]]
+                                                  for j in range(len(shortest_path))])
+
+                capacities[vehicle] = problem_params.W
+
+                for edge in shortest_path:
+                    traversals[edge[0], edge[1]] += 1
+
+                travelled_distance += np.sum([problem_params.c[shortest_path[j][0],
+                                                               shortest_path[j][1]]
+                                              for j in range(len(shortest_path))])
+
+                positions[vehicle] = problem_params.num_nodes-1
 
         # update variables
         self.total_service_time = np.sum(service_times)
@@ -235,11 +331,28 @@ class SinglePeriodVectorSolution:
         # compute total work deviation
         self.objectives[3] = np.sum(1 - self.total_service_time / problem_params.T_max)
 
-    def mutate(self, problem_params: ProblemParams):
+    def mutate(self):
         """
-        Mutate the solution.
+        Mutate the solution randomly.
         """
-        # TODO
+        # choose mutation operator
+        mutation_type = np.random.choice(["edge_swap",
+                                          "trip_swap",
+                                          "trip_shuffle",
+                                          "trip_reverse",
+                                          "trip_combine"])
+
+        # apply mutation operator
+        if mutation_type == "edge_swap":
+            edge_swap(self)
+        elif mutation_type == "trip_swap":
+            trip_swap(self)
+        elif mutation_type == "trip_shuffle":
+            trip_shuffle(self)
+        elif mutation_type == "trip_reverse":
+            trip_reverse(self)
+        elif mutation_type == "trip_combine":
+            trip_combine(self)
 
     def is_feasible(self, problem_params: ProblemParams) -> bool:
         """

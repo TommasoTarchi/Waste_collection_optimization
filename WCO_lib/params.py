@@ -48,27 +48,6 @@ def check_MosaMoiwoaSolverParams(params):
     assert params.MOIWOA_S_min < params.MOIWOA_S_max, "Minimum number of children seeds must be less than maximum number."
 
 
-def compute_service_time(edge_demand: float,
-                         edge_traversing_time: float,
-                         ul: float,
-                         uu: float) -> float:
-    """
-    Compute the service time of a vehicle for a given edge traversed.
-    """
-    service_time = edge_demand * (ul + uu) + edge_traversing_time
-
-    return service_time
-
-
-def update_capacity(current_capacity: float, edge_demand: float) -> float:
-    """
-    Update the capacity of a vehicle based on last edge traversed.
-    """
-    new_capacity = current_capacity - edge_demand
-
-    return new_capacity
-
-
 class ProblemParams:
     """
     Class to store parameters of the problem.

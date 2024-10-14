@@ -1,5 +1,6 @@
 import numpy as np
 from deap import creator, base, tools
+import networkx as nx
 
 from .params import ProblemParams, MosaMoiwoaSolverParams
 from .models_heuristic import SinglePeriodVectorSolution, generate_heuristic_solution, MOSA
@@ -102,6 +103,13 @@ def MOIWOA(initial_seeds: list,
     min_fitness = min(current_fitness_values)
     max_fitness = max(current_fitness_values)
 
+    # pre-build graphs for seeds mutation
+    G = []
+    for period_idx in range(problem_params.num_periods):
+        G_period = nx.Graph()
+        G_period.add_edges_from(problem_params.existing_edges[period_idx])
+        G.append(G_period)
+
     n_iter = 0
     while n_iter < max_iter:
 
@@ -124,16 +132,22 @@ def MOIWOA(initial_seeds: list,
                     child_period_solution = SinglePeriodVectorSolution(period_idx)
                     child_period_solution.set_first_part(period_solution.first_part)
                     child_period_solution.set_second_part(period_solution.second_part)
-                    child_period_solution.update_quantities(problem_params)
 
-                    while True:
-                        # mutate period solution
-                        child_period_solution.mutate(problem_params)
+                    # mutate period solution and add to child seed
+                    child_period_solution.mutate()
+                    child_period_solution.update_quantities(problem_params,
+                                                            G[period_idx])
+                    child_seed.append(child_period_solution)
 
-                        # if period solution is feasible, add to child seed
-                        if child_period_solution.is_feasible(problem_params):
-                            child_seed.append(child_period_solution)
-                            break
+                # add new seed to children seeds
+                new_seeds.append(child_seed)
+
+        # eliminate non-feasible children seeds
+        for seed in new_seeds:
+            for period_solution in seed:
+                if not period_solution.is_feasible(problem_params):
+                    new_seeds.remove(seed)
+                    break
 
         # compute objectives and fitness values for children seeds
         new_fitness_values = []
@@ -175,7 +189,8 @@ class MosaMoiwoaSolver:
     Solver class to solve the optimization problem using MOSA-MOIWOA.
     """
 
-    def __init__(self, problem_params: ProblemParams, solver_params: MosaMoiwoaSolverParams) -> None:
+    def __init__(self, problem_params: ProblemParams,
+                 solver_params: MosaMoiwoaSolverParams) -> None:
         self.problem_params = problem_params
         self.solver_params = solver_params
         self.initial_solutions = None
@@ -220,3 +235,7 @@ class MosaMoiwoaSolver:
                                       self.solver_params.MOIWOA_S_max,
                                       self.solver_params.MOIWOA_N_max,
                                       self.solver_params.MOIWOA_max_iter)
+
+    # TODO: aggiungere metodi per ritornare soluzioni e magari anche
+    #       convertirle in un formato più simile a quello dell'epsilon
+    #       solver

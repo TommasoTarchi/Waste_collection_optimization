@@ -1,5 +1,6 @@
 import numpy as np
 import networkx as nx
+import copy
 
 from .params import ProblemParams
 from .mutations import (edge_swap,
@@ -58,7 +59,7 @@ class SinglePeriodVectorSolution:
         self.first_part = None
         self.second_part = None
         self.total_service_time = None
-        self.capacieties = None  # remaining capacities of each vehicle
+        self.capacities = None  # remaining capacities of each vehicle
         self.traversals = None  # number of traversals of each edge
         self.total_travelled_distance = None
         self.vehicle_employed = None  # whether each vehicle was employed in this period
@@ -130,8 +131,8 @@ class SinglePeriodVectorSolution:
         self.vehicle_employed = np.full(problem_params.num_vehicles, False)
 
         # iterate until all required edges are covered
-        d_temp = problem_params.d[:, :, self.period].copy()
-        required_edges_temp = problem_params.required_edges.copy()
+        d_temp = copy.deepcopy(problem_params.d[:, :, self.period])
+        required_edges_temp = copy.deepcopy(problem_params.required_edges)[self.period]
         solution_idx = 0  # index of the current element of the solution
         while required_edges_temp:
             # select current position
@@ -139,10 +140,11 @@ class SinglePeriodVectorSolution:
 
             # find closest starting node of a required edge to current position
             candidate_next_starts = np.where(np.any(d_temp > 0, axis=1))[0]
-            next_start = candidate_next_starts[np.argmin(problem_params.c[current_position, candidate_next_starts])]
+            next_start = candidate_next_starts[np.argmin(problem_params.c[current_position,
+                                                                          candidate_next_starts])]
 
             # choose ending node of required edge at random among non-zero demand edges
-            next_end = np.random.choice(np.nonzero(next_start)[0])
+            next_end = np.random.choice(np.nonzero(d_temp[next_start])[0])
 
             # compute service time for possible next position
             next_service_time = problem_params.t[current_position, next_start]  # time to go to required edge
@@ -154,25 +156,29 @@ class SinglePeriodVectorSolution:
             next_service_time_tot += problem_params.t[problem_params.num_nodes-1, 0]  # add time to go back to depot
 
             # compute remaining capacity for possible next position
-            next_capacity = update_capacity(capacities[current_vehicle], problem_params.d[next_start, next_end])
+            next_capacity = update_capacity(capacities[current_vehicle],
+                                            problem_params.d[next_start, next_end])
 
             # serve next required edge with current vehicle
             if next_service_time_tot < problem_params.T_max and next_capacity >= 0:
+
                 # update
                 service_times[current_vehicle] = next_service_time
                 capacities[current_vehicle] = next_capacity
                 d_temp[next_start, next_end] = 0
                 positions[current_vehicle] = next_end
                 traversals[next_start, next_end] += 1
-                travelled_distance += problem_params.c[current_position, next_start] + problem_params.c[next_start, next_end]
+                travelled_distance += (problem_params.c[current_position, next_start]
+                                       + problem_params.c[next_start, next_end])
 
                 # update required edges (symmetrically)
-                if next_end < next_start:
-                    next_start, next_end = next_end, next_start
                 required_edges_temp.remove((next_start, next_end))
+                required_edges_temp.remove((next_end, next_start))
+                d_temp[next_end, next_start] = 0.
+                d_temp[next_start, next_end] = 0.
 
                 # update elements of the solution
-                self.first_part[solution_idx] = problem_params.required_edges.index((next_start, next_end))
+                self.first_part[solution_idx] = problem_params.required_edges[self.period].index((next_start, next_end))
                 self.second_part[solution_idx] = current_vehicle
                 solution_idx += 1
 
@@ -181,8 +187,10 @@ class SinglePeriodVectorSolution:
 
             # go to disposal site
             elif current_position != problem_params.num_nodes-1:
+
                 # update
-                service_times[current_vehicle] = problem_params.t[current_position, problem_params.num_nodes-1]
+                service_times[current_vehicle] = problem_params.t[current_position,
+                                                                  problem_params.num_nodes-1]
                 capacities[current_vehicle] = problem_params.W
                 positions[current_vehicle] = problem_params.num_nodes-1
                 traversals[current_position, problem_params.num_nodes-1] += 1
@@ -190,6 +198,7 @@ class SinglePeriodVectorSolution:
 
             # go back to depot
             else:
+
                 # update
                 service_times[current_vehicle] = problem_params.t[problem_params.num_nodes-1, 0]
                 positions[current_vehicle] = 0
@@ -203,15 +212,17 @@ class SinglePeriodVectorSolution:
         # move all vehicles to depot and update service times
         for vehicle in range(problem_params.num_vehicles):
             if positions[vehicle] != 0:
-                service_times[vehicle] += problem_params.t[positions[vehicle], problem_params.num_nodes-1] + problem_params.t[problem_params.num_nodes-1, 0]
+                service_times[vehicle] += (problem_params.t[positions[vehicle], problem_params.num_nodes-1]
+                                           + problem_params.t[problem_params.num_nodes-1, 0])
 
         # save supplementary data
         self.total_service_time = np.sum(service_times)
-        self.capacieties = capacities
+        self.capacities = capacities
         self.traversals = traversals
         self.total_travelled_distance = travelled_distance
 
-    def update_quantities(self, problem_params: ProblemParams, G: nx.Graph):
+    def update_quantities(self, problem_params: ProblemParams,
+                          graph: nx.Graph) -> None:
         """
         Update the quantities of the solution.
         (To be used when the first and/or second part are changed).
@@ -227,17 +238,17 @@ class SinglePeriodVectorSolution:
         # iterate over required edges in the solution
         for i in range(self.first_part.shape[0]):
             # get required edge and vehicle
-            required_edge = problem_params.required_edges[self.first_part[i]]
+            required_edge = problem_params.required_edges[self.period][self.first_part[i]]
             vehicle = self.second_part[i]
             required_start = required_edge[0]
             required_end = required_edge[1]
 
             # compute shortest path from current position to required edge
             # (we have to choose in what direction to 'take' the edge)
-            shortest_path_tostart = find_shortest_path(G,
+            shortest_path_tostart = find_shortest_path(graph,
                                                        positions[vehicle],
                                                        required_start)
-            shortest_path_toend = find_shortest_path(G,
+            shortest_path_toend = find_shortest_path(graph,
                                                      positions[vehicle],
                                                      required_end)
 
@@ -282,13 +293,13 @@ class SinglePeriodVectorSolution:
             positions[vehicle] = required_end
 
             # check if vehicle has to go back to disposal site
-            next_required_edge = problem_params.required_edges[self.first_part[i+1]]
+            next_required_edge = problem_params.required_edges[self.period][self.first_part[i+1]]
             if (i == self.first_part.shape[0]-1 or
                 self.second_part[i+1] != self.second_part[i] or
-                self.d[next_required_edge[0], next_required_edge[1]] > capacities[vehicle]):
+                problem_params.d[next_required_edge[0], next_required_edge[1]] > capacities[vehicle]):
 
                 # compute shortest path from current position to disposal site
-                shortest_path = find_shortest_path(G, positions[vehicle], problem_params.num_nodes-1)
+                shortest_path = find_shortest_path(graph, positions[vehicle], problem_params.num_nodes-1)
 
                 # update quantities
                 service_times[vehicle] += np.sum([problem_params.t[shortest_path[j][0],
@@ -319,8 +330,17 @@ class SinglePeriodVectorSolution:
         """
         self.objectives = np.zeros(4)
 
+        #############################################
+        print(self.total_travelled_distance)
+        print(self.vehicle_employed)
+        print(self.traversals)
+        print(self.total_service_time)
+        print(self.capacities)
+        #############################################
+
         # compute total waste collection routing cost
-        self.objectives[0] = problem_params.theta * self.total_travelled_distance + problem_params.cv.dot(self.vehicle_employed)
+        self.objectives[0] = (problem_params.theta * self.total_travelled_distance
+                              + problem_params.cv.dot(self.vehicle_employed))
 
         # compute total pollution routing cost
         self.objectives[1] = np.sum(problem_params.G * self.traversals)
@@ -363,16 +383,19 @@ class SinglePeriodVectorSolution:
         if self.total_service_time > problem_params.T_max:
             feasible = False
 
-        if np.any(self.capacieties < 0):
+        if np.any(self.capacities < 0):
             feasible = False
 
         return feasible
 
 
-def generate_heuristic_solution(problem_params: ProblemParams) -> list:
+def generate_heuristic_solution(problem_params: ProblemParams,
+                                graph: nx.Graph) -> list:
     """
     Generate a (single) initial solution to the problem according to the first heuristic
     in the paper.
+
+    A pre-built graph must be provided.
     """
     solution_heuristic = []
 
@@ -380,6 +403,7 @@ def generate_heuristic_solution(problem_params: ProblemParams) -> list:
     for period in range(problem_params.num_periods):
         solution = SinglePeriodVectorSolution(period)
         solution.init_heuristic(problem_params)
+        solution.update_quantities(problem_params, graph)
         solution_heuristic.append(solution)
 
     return solution_heuristic
@@ -441,11 +465,21 @@ def MOSA(initial_solution: list,
     Apply Multi-Objective Simulated Annealing (MOSA) to a (single) initial solution.
     """
     T = T_0
-    current_solution = initial_solution
+    current_solution = copy.deepcopy(initial_solution)
 
     # compute objective functions for the current solution
-    current_objective_functions = np.array([0, 0, 0, 0])
+    current_objective_functions = np.array([0., 0., 0., 0.])
     for period_solution in current_solution:
+        #############################################
+        print("--------------------")
+        print(period_solution)
+        print(period_solution.total_travelled_distance)
+        print(period_solution.vehicle_employed)
+        print(period_solution.traversals)
+        print(period_solution.total_service_time)
+        print(period_solution.capacities)
+        print("--------------------")
+        #############################################
         period_solution.compute_objectives(problem_params)
         current_objective_functions += period_solution.objectives
 
@@ -466,7 +500,7 @@ def MOSA(initial_solution: list,
             # generate neighbor period solution
             if np.random.uniform() < 0.5:
                 # perturb first part
-                ngbr_solution[period].set_first_part(np.random.permutation(current_first_part.size[0]))
+                ngbr_solution[period].set_first_part(np.random.permutation(current_first_part.shape[0]))
 
                 # copy second part
                 ngbr_solution[period].set_second_part(current_second_part)

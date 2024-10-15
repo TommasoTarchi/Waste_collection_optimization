@@ -23,20 +23,17 @@
 - Eventualmente aggiungere altri stopping criteria.
 - Far notare che si sono aggiunti stopping criteria (citare paper da cui si sono presi).
 - Far notare che si è usato deap per il non-dominated sorting.
-- Valutare se esistano modi più efficienti per fare il non-dominated sorting (magari
-  tenendo in considerazione il sorting fatto al passo precedente).
-- Far notare che non si è usato gurobi.
 - Far notare come si è calcolata la fitness (con standardizzazione).
 - Far notare come si sono ordinate le soluzioni con stesso grado di ottimalità in MOIWOA.
 - Far notare che, anche se il fatto di far riprodurre le soluzioni in base alla fitness può
   favorire soluzioni non dominanti, il troncamento delle soluzioni in base all dominanza
   corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
   ecceda in numero massimo.
+- Far notare che in MOSA l'algoritmo viene fermato quando non si ha miglioramento per un
+  certo numero di iterazioni.
 - Valutare se cambiare in metodo di calcolo della fitness.
 - Aggiungere README.
-- Aggiungere requirements.
 - Aggiungere LICENSE.
-- Citare deap (se usata).
 - Far notare che nella risoluzione con epsilon-constraint method si è scelto il numero di trip
   per periodo arbitrariamente uguale al numero di required edges (nel caso "peggiore" un solo
   veicolo viene usato in un periodo, e tale veicolo fa un trip per ogni required edge, ergo
@@ -46,8 +43,6 @@
   (16) e (17) ai nodi di partenza e arrivo).
 - Spiegare come si sono generati i valori di c, in particilare come si è formato il connected
   graph (usando networkx).
-- Far notare come si è gestito il constraint (13) nel modello esatto (usando il lazy constraint
-  solo sugli edge rilevanti).
 - Far notare come si sono scelti i parametri del problema date le dimensioni di un problema
   (scrivere anche equazioni usate nello script).
 - Far notare che il numero di epoche è ciò che rende l'ottimizzazione più onerosa computazionalmente,
@@ -63,7 +58,6 @@
   i risultati del modello stesso che lo ottimizzava è stato escluso.
 - Far notare che le formule per MID e RASO del paper sono dovute essere corrette perché uno degli
   objective è massimizzato. Far notare che si è anche normalizzato MID.
-- Far notare che il constraint (13) è (di gran lunga) quello che rende il modello più lento.
 - Far notare come si è corretta la formula per il constraint (13): solo sottoinsiemi connessi e
   aggiustamento di right_hand_side quando il subset contiene l'origine del moto.
 

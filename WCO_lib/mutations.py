@@ -1,9 +1,7 @@
 import numpy as np
 
-from .models_heuristic import SinglePeriodVectorSolution
 
-
-def detect_trips(solution: SinglePeriodVectorSolution) -> np.ndarray:
+def detect_trips(solution) -> np.ndarray:
     """
     Detect trips in a solution (actually not real trips but sequences of
     edges served by the same vehicle).
@@ -23,7 +21,7 @@ def detect_trips(solution: SinglePeriodVectorSolution) -> np.ndarray:
     return trips
 
 
-def edge_swap(solution: SinglePeriodVectorSolution) -> None:
+def edge_swap(solution) -> None:
     """
     Swap two edges in a solution randomly.
     """
@@ -37,7 +35,7 @@ def edge_swap(solution: SinglePeriodVectorSolution) -> None:
     solution.set_first_part(first_part)
 
 
-def trip_swap(solution: SinglePeriodVectorSolution) -> None:
+def trip_swap(solution) -> None:
     """
     Swap two trips in a solution randomly.
     """
@@ -73,7 +71,7 @@ def trip_swap(solution: SinglePeriodVectorSolution) -> None:
     solution.set_first_part(swapped)
 
 
-def trip_shuffle(solution: SinglePeriodVectorSolution) -> None:
+def trip_shuffle(solution) -> None:
     """
     Shuffle order of served edges in a trip in a solution randomly.
     """
@@ -92,7 +90,7 @@ def trip_shuffle(solution: SinglePeriodVectorSolution) -> None:
     solution.set_first_part(shuffled)
 
 
-def trip_reverse(solution: SinglePeriodVectorSolution) -> None:
+def trip_reverse(solution) -> None:
     """
     Reverse order of served edges in a trip in a solution randomly.
     """
@@ -112,7 +110,7 @@ def trip_reverse(solution: SinglePeriodVectorSolution) -> None:
     solution.set_first_part(flipped)
 
 
-def trip_combine(solution: SinglePeriodVectorSolution) -> None:
+def trip_combine(solution) -> None:
     """
     Combine two halves of two trips in a solution randomly.
     """

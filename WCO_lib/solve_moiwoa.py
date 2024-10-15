@@ -1,9 +1,12 @@
 import numpy as np
 from deap import creator, base, tools
 import networkx as nx
+import copy
 
 from .params import ProblemParams, MosaMoiwoaSolverParams
-from .models_heuristic import SinglePeriodVectorSolution, generate_heuristic_solution, MOSA
+from .models_heuristic import (SinglePeriodVectorSolution,
+                               generate_heuristic_solution,
+                               MOSA)
 
 
 # create DEAP classes for non-dominated sorting
@@ -40,12 +43,12 @@ def sort_seeds(objective_values: list) -> list:
     """
     sorted_seeds_idx = []
 
-    # Create DEAP individuals and assign fitness values
+    # create DEAP individuals and assign fitness values
     individuals = [creator.Individual(objectives) for objectives in objective_values]
     for ind in individuals:
         ind.fitness.values = tuple(ind)
 
-    # Apply non-dominated sorting
+    # apply non-dominated sorting
     fronts = tools.sortNondominated(individuals, len(individuals), first_front_only=False)
 
     # sort seeds by fronts and crowding distance
@@ -64,7 +67,7 @@ def sort_seeds(objective_values: list) -> list:
             # sort front by crowding distance
             front.sort(key=lambda ind: ind.fitness.crowding_dist, reverse=True)
 
-            # Extract sorted indices
+            # extract sorted indices
             front_sorted = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
             sorted_seeds_idx.extend(front_sorted)
 
@@ -73,6 +76,7 @@ def sort_seeds(objective_values: list) -> list:
 
 def MOIWOA(initial_seeds: list,
            problem_params: ProblemParams,
+           graph: nx.Graph,
            S_min: float = 9.0,
            S_max: float = 200.0,
            N_max: int = 100,
@@ -80,6 +84,9 @@ def MOIWOA(initial_seeds: list,
     """
     Apply Multi-Objective Invasive Weed Optimization Algorithm (MOIWOA) to a list of
     initial solutions.
+
+    The argument "graph" is a networkx.Graph object representing the existing edges in
+    the problem.
     """
     current_seeds = initial_seeds
     current_objectives_values = []
@@ -102,13 +109,6 @@ def MOIWOA(initial_seeds: list,
         current_fitness_values.append(compute_fitness(seed_objectives, avg_objectives))
     min_fitness = min(current_fitness_values)
     max_fitness = max(current_fitness_values)
-
-    # pre-build graphs for seeds mutation
-    G = []
-    for period_idx in range(problem_params.num_periods):
-        G_period = nx.Graph()
-        G_period.add_edges_from(problem_params.existing_edges[period_idx])
-        G.append(G_period)
 
     n_iter = 0
     while n_iter < max_iter:
@@ -136,7 +136,7 @@ def MOIWOA(initial_seeds: list,
                     # mutate period solution and add to child seed
                     child_period_solution.mutate()
                     child_period_solution.update_quantities(problem_params,
-                                                            G[period_idx])
+                                                            graph)
                     child_seed.append(child_period_solution)
 
                 # add new seed to children seeds
@@ -197,13 +197,19 @@ class MosaMoiwoaSolver:
         self.MOSA_solutions = None
         self.final_solutions = None
 
+        # pre-build graph for problem
+        graph = nx.Graph()
+        graph.add_edges_from(self.problem_params.existing_edges)
+        self.graph = graph
+
     def generate_initial_solutions(self) -> None:
         """
         Generate initial solutions with heuristic.
         """
         self.initial_solutions = []
         for _ in range(self.solver_params.N_0):
-            initial_solution = generate_heuristic_solution(self.problem_params)
+            initial_solution = generate_heuristic_solution(self.problem_params,
+                                                           self.graph)
             self.initial_solutions.append(initial_solution)
 
     def apply_MOSA(self) -> None:
@@ -211,6 +217,19 @@ class MosaMoiwoaSolver:
         Apply Multi-Objective Simulated Annealing (MOSA) to initial solutions.
         """
         assert self.initial_solutions is not None, "Before applying MOSA initial solutions must be generated."
+
+
+        #############################################
+        for initial_solution in self.initial_solutions:
+            print("--------------------")
+            print(initial_solution[0])
+            print(initial_solution[0].total_travelled_distance)
+            print(initial_solution[0].vehicle_employed)
+            print(initial_solution[0].traversals)
+            print(initial_solution[0].total_service_time)
+            print(initial_solution[0].capacities)
+            print("--------------------")
+        #############################################
 
         self.MOSA_solutions = []
         for initial_solution in self.initial_solutions:
@@ -236,6 +255,37 @@ class MosaMoiwoaSolver:
                                       self.solver_params.MOIWOA_N_max,
                                       self.solver_params.MOIWOA_max_iter)
 
-    # TODO: aggiungere metodi per ritornare soluzioni e magari anche
-    #       convertirle in un formato più simile a quello dell'epsilon
-    #       solver
+    def return_solutions(self, stage: str = "final") -> list:
+        """
+        Return requested solutions as list of dictionaries, with the following structure:
+        list containing one list for each solution found, each one containing one dictionary
+        for each period with two entries: "first_part" and "second_part".
+
+        Argument "type" can be "initial", "MOSA" or "final".
+        """
+        assert stage in ["initial", "MOSA", "final"], "Invalid stage argument: valid values are 'initial', 'MOSA' and 'final'."
+
+        # get requested solutions
+        solutions = None
+        if stage == "initial":
+            solutions = copy.deepcopy(self.initial_solutions)
+        elif stage == "MOSA":
+            solutions = copy.deepcopy(self.MOSA_solutions)
+        elif stage == "final":
+            solutions = copy.deepcopy(self.final_solutions)
+
+        assert solutions is not None, "Requested solutions have not been computed yet."
+
+        # convert solutions to list of dictionaries
+        solutions_dicts = []
+        for solution in solutions:
+            solutions_dicts.append([])
+            for period_solution in solution:
+                solution_dict = {"first_part": period_solution.first_part.tolist(),
+                                 "second_part": period_solution.second_part.tolist()}
+                solutions_dicts[-1].append(solution_dict)
+
+        return solutions_dicts
+
+    # TODO: implementare metodo per convertire (e ritornare) soluzioni nella stessa
+    #       forma dell'epsilon-solver

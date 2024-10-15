@@ -45,17 +45,24 @@ if __name__ == "__main__":
     print("Problem set.\n")
 
     solver.generate_initial_solutions()
+    initial_solutions = solver.return_solutions(stage="initial")
 
-    print("Initial solutions generated\n")
+    print("Initial solutions generated:")
+    print(initial_solutions)
+    print("\n")
 
     solver.apply_MOSA()
+    MOSA_solutions = solver.return_solutions(stage="MOSA")
 
-    print("MOSA applied.\n")
+    print("MOSA applied, with solutions:")
+    print(MOSA_solutions)
+    print("\n")
 
-    solver.apply_MOIWOA()
+    #solver.apply_MOIWOA()
+    #final_solutions = solver.return_solutions(stage="final")
 
-    # TODO: return solutions in some way
-
-    print("Problem solved with MOIWOA.\n")
+    #print("Problem solved with MOIWOA, with final solutions:")
+    #print(final_solutions)
+    #print("\n")
 
     # TODO: check solutions in some way

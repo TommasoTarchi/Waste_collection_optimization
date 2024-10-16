@@ -1,6 +1,5 @@
 import numpy as np
 from deap import creator, base, tools
-import networkx as nx
 import copy
 
 from .params import ProblemParams, MosaMoiwoaSolverParams
@@ -18,7 +17,16 @@ def compute_fitness(objectives: np.ndarray, avg_objectives: np.ndarray) -> np.fl
     """
     Compute the fitness value of a solution.
     """
-    fitness = 0.0
+    # correct possible division by zero
+    #
+    # NOTE: since we are guaranteed that objectives are always >= 0, we can
+    #       safely assume that if an average objective is zero, then all the
+    #       values of that objective are zero, and they will not contribute
+    #       to the computation of fitness.
+    for i in range(len(avg_objectives)):
+        if avg_objectives[i] == 0:
+            avg_objectives[i] = 1
+
     fitness = np.sum(objectives / avg_objectives) / objectives.shape[0]
 
     return fitness
@@ -32,7 +40,7 @@ def compute_n_seeds(fitness: float,
     """
     Compute the number of seeds for a solution.
     """
-    S = int(S_min + (S_max - S_min) * (fitness - min_fitness) / (min_fitness - max_fitness))
+    S = S_min + (S_max - S_min) * (fitness - min_fitness) / (min_fitness - max_fitness)
 
     return round(S)
 
@@ -76,7 +84,6 @@ def sort_seeds(objective_values: list) -> list:
 
 def MOIWOA(initial_seeds: list,
            problem_params: ProblemParams,
-           graph: nx.Graph,
            S_min: float = 9.0,
            S_max: float = 200.0,
            N_max: int = 100,
@@ -84,9 +91,6 @@ def MOIWOA(initial_seeds: list,
     """
     Apply Multi-Objective Invasive Weed Optimization Algorithm (MOIWOA) to a list of
     initial solutions.
-
-    The argument "graph" is a networkx.Graph object representing the existing edges in
-    the problem.
     """
     current_seeds = initial_seeds
     current_objectives_values = []
@@ -99,10 +103,13 @@ def MOIWOA(initial_seeds: list,
             period_solution.compute_objectives(problem_params)
             seed_objectives += period_solution.objectives
         current_objectives_values.append(seed_objectives)
+
+    # compute average objective values on current seeds (for standardization
+    # in fitness computation)
     avg_objectives = np.zeros(4)
     for objectives in current_objectives_values:
         avg_objectives += objectives
-    avg_objectives /= len(current_objectives_values)  # for standardization
+    avg_objectives /= len(current_objectives_values)
 
     # compute fitness values for initial seeds
     for seed_objectives in current_objectives_values:
@@ -135,8 +142,7 @@ def MOIWOA(initial_seeds: list,
 
                     # mutate period solution and add to child seed
                     child_period_solution.mutate()
-                    child_period_solution.update_quantities(problem_params,
-                                                            graph)
+                    child_period_solution.update_quantities(problem_params)
                     child_seed.append(child_period_solution)
 
                 # add new seed to children seeds
@@ -168,7 +174,7 @@ def MOIWOA(initial_seeds: list,
         # truncate seed population if larger than upper limit
         if len(current_seeds) > N_max:
             # apply non-dominated sorting
-            sorted_seeds_idx = sort_seeds(current_fitness_values)
+            sorted_seeds_idx = sort_seeds(current_objectives_values)
 
             # truncate seed population
             current_seeds = [current_seeds[i] for i in sorted_seeds_idx[:N_max]]
@@ -197,19 +203,13 @@ class MosaMoiwoaSolver:
         self.MOSA_solutions = None
         self.final_solutions = None
 
-        # pre-build graph for problem
-        graph = nx.Graph()
-        graph.add_edges_from(self.problem_params.existing_edges)
-        self.graph = graph
-
     def generate_initial_solutions(self) -> None:
         """
         Generate initial solutions with heuristic.
         """
         self.initial_solutions = []
         for _ in range(self.solver_params.N_0):
-            initial_solution = generate_heuristic_solution(self.problem_params,
-                                                           self.graph)
+            initial_solution = generate_heuristic_solution(self.problem_params)
             self.initial_solutions.append(initial_solution)
 
     def apply_MOSA(self) -> None:
@@ -217,19 +217,6 @@ class MosaMoiwoaSolver:
         Apply Multi-Objective Simulated Annealing (MOSA) to initial solutions.
         """
         assert self.initial_solutions is not None, "Before applying MOSA initial solutions must be generated."
-
-
-        #############################################
-        for initial_solution in self.initial_solutions:
-            print("--------------------")
-            print(initial_solution[0])
-            print(initial_solution[0].total_travelled_distance)
-            print(initial_solution[0].vehicle_employed)
-            print(initial_solution[0].traversals)
-            print(initial_solution[0].total_service_time)
-            print(initial_solution[0].capacities)
-            print("--------------------")
-        #############################################
 
         self.MOSA_solutions = []
         for initial_solution in self.initial_solutions:

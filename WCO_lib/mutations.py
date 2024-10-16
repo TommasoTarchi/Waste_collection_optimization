@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 
 def detect_trips(solution) -> np.ndarray:
@@ -8,11 +9,11 @@ def detect_trips(solution) -> np.ndarray:
 
     Returns an array in which the trips are identified by the same integer.
     """
-    trips = np.zeros(solution.first_part.size[0], dtype=int)  # initialize trips identifier
+    trips = np.zeros(solution.first_part.shape[0], dtype=int)  # initialize trips identifier
 
     # detect trips
     trips[0] = 0
-    for i in range(1, solution.first_part.size[0]):
+    for i in range(1, solution.first_part.shape[0]):
         if solution.second_part[i] == solution.second_part[i-1]:
             trips[i] = trips[i-1]
         else:
@@ -25,10 +26,10 @@ def edge_swap(solution) -> None:
     """
     Swap two edges in a solution randomly.
     """
-    first_part = solution.first_part.copy()
+    first_part = copy.deepcopy(solution.first_part)
 
     # choose two edges randomly
-    i, j = np.random.choice(first_part.size[0], size=2, replace=False)
+    i, j = np.random.choice(first_part.shape[0], size=2, replace=False)
 
     # swap edges and update solution
     first_part[i], first_part[j] = first_part[j], first_part[i]
@@ -53,8 +54,13 @@ def trip_swap(solution) -> None:
     start_trip2 = indexes_trip2[0]
     length_trip2 = indexes_trip2.shape[0]
 
+    # make sure trip2 comes after trip1 (needed for correct swapping)
+    if start_trip1 > start_trip2:
+        start_trip1, start_trip2 = start_trip2, start_trip1
+        length_trip1, length_trip2 = length_trip2, length_trip1
+
     # initialize new array
-    old_array = solution.first_part.copy()
+    old_array = copy.deepcopy(solution.first_part)
     swapped = np.empty_like(old_array)
 
     # create new array with swapped trips
@@ -83,7 +89,7 @@ def trip_shuffle(solution) -> None:
     indexes_trip = np.where(trips == trip)[0]
 
     # shuffle the sequence of edges in the trip
-    shuffled = solution.first_part.copy()
+    shuffled = copy.deepcopy(solution.first_part)
     np.random.shuffle(shuffled[indexes_trip[0]:indexes_trip[-1] + 1])
 
     # update solution
@@ -102,7 +108,7 @@ def trip_reverse(solution) -> None:
     indexes_trip = np.where(trips == trip)[0]
 
     # flip the sequence of edges in the trip
-    flipped = solution.first_part.copy()
+    flipped = copy.deepcopy(solution.first_part)
     flipped[indexes_trip[0]:indexes_trip[-1] + 1] = np.flip(flipped[indexes_trip[0]:
                                                                     indexes_trip[-1] + 1])
 

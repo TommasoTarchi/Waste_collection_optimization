@@ -35,6 +35,7 @@ if __name__ == "__main__":
     # load problem parameters
     problem_params = ProblemParams()
     problem_params.load_from_dir(data_dir)
+    problem_params.build_graph()
 
     print("Parameters loaded.\n")
 
@@ -58,11 +59,11 @@ if __name__ == "__main__":
     print(MOSA_solutions)
     print("\n")
 
-    #solver.apply_MOIWOA()
-    #final_solutions = solver.return_solutions(stage="final")
+    solver.apply_MOIWOA()
+    final_solutions = solver.return_solutions(stage="final")
 
-    #print("Problem solved with MOIWOA, with final solutions:")
-    #print(final_solutions)
-    #print("\n")
+    print("Problem solved with MOIWOA, with final solutions:")
+    print(final_solutions)
+    print("\n")
 
     # TODO: check solutions in some way

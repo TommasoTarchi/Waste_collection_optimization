@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import networkx as nx
 
 
 def check_ProblemParams(params):
@@ -84,6 +85,9 @@ class ProblemParams:
         # number of periods each vehicle is employed for
         self.periods_employed = None
 
+        # networkx graph for MOSA-MOIWOA
+        self.graph = None
+
     def load_from_dir(self, data_dir):
         # define paths to init data
         params_path = data_dir + '/problem_parameters.json'
@@ -142,6 +146,23 @@ class ProblemParams:
 
         # check coherence of parameters
         check_ProblemParams(self)
+
+    def build_graph(self):
+        """
+        Build a networkx graph from the problem parameters.
+        """
+        assert self.existing_edges is not None, "Existing edges must be defined."
+        assert self.c is not None, "Edge distance must be defined."
+
+        graph = nx.Graph()
+
+        # add edges to the graph
+        graph.add_edges_from(self.existing_edges)
+        for i, j in graph.edges():
+            graph[i][j]['weight'] = self.c[i, j]
+
+        # save graph
+        self.graph = graph
 
     def save_to_dir(self, data_dir):
         # define paths to init data

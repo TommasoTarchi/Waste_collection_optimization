@@ -293,7 +293,6 @@ class BaseModel:
         """
         Solve the model.
         """
-
         # optimize model
         self.model.optimize()
 

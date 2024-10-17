@@ -36,47 +36,6 @@ def edge_swap(solution) -> None:
     solution.set_first_part(first_part)
 
 
-def trip_swap(solution) -> None:
-    """
-    Swap two trips in a solution randomly.
-    """
-    # detect distinct trips
-    trips = detect_trips(solution)
-
-    # choose two trips randomly and find positions in the solution array
-    trip1, trip2 = np.random.choice(np.unique(trips), size=2, replace=False)
-
-    indexes_trip1 = np.where(trips == trip1)[0]
-    indexes_trip2 = np.where(trips == trip2)[0]
-
-    start_trip1 = indexes_trip1[0]
-    length_trip1 = indexes_trip1.shape[0]
-    start_trip2 = indexes_trip2[0]
-    length_trip2 = indexes_trip2.shape[0]
-
-    # make sure trip2 comes after trip1 (needed for correct swapping)
-    if start_trip1 > start_trip2:
-        start_trip1, start_trip2 = start_trip2, start_trip1
-        length_trip1, length_trip2 = length_trip2, length_trip1
-
-    # initialize new array
-    old_array = copy.deepcopy(solution.first_part)
-    swapped = np.empty_like(old_array)
-
-    # create new array with swapped trips
-    swapped[:start_trip1] = old_array[:start_trip1]
-    swapped[start_trip1:start_trip1 + length_trip2] = old_array[start_trip2:
-                                                                start_trip2 + length_trip2]
-    swapped[start_trip1 + length_trip2:start_trip2 - length_trip1 + length_trip2] = old_array[start_trip1 + length_trip1:
-                                                                                              start_trip2]
-    swapped[start_trip2 - length_trip1 + length_trip2:start_trip2 + length_trip2] = old_array[start_trip1:
-                                                                                              start_trip1 + length_trip1]
-    swapped[start_trip2 + length_trip2:] = old_array[start_trip2 + length_trip2:]
-
-    # update solution
-    solution.set_first_part(swapped)
-
-
 def trip_shuffle(solution) -> None:
     """
     Shuffle order of served edges in a trip in a solution randomly.
@@ -120,5 +79,56 @@ def trip_combine(solution) -> None:
     """
     Combine two halves of two trips in a solution randomly.
     """
-    # TODO
-    pass
+    # detect distinct trips
+    trips = detect_trips(solution)
+
+    # choose two trips randomly and find positions in the solution array
+    trip1, trip2 = np.random.choice(np.unique(trips), size=2, replace=False)
+
+    indexes_trip1 = np.where(trips == trip1)[0]
+    indexes_trip2 = np.where(trips == trip2)[0]
+
+    start_trip1 = indexes_trip1[0]
+    length_trip1 = indexes_trip1.shape[0]
+    lfh_trip1 = int(length_trip1 / 2)  # length of first half of trip1
+    start_trip2 = indexes_trip2[0]
+    length_trip2 = indexes_trip2.shape[0]
+    lfh_trip2 = int(length_trip2 / 2)  # length of first half of trip2
+
+    # make sure trip2 comes after trip1 (needed for correct swapping)
+    if start_trip1 > start_trip2:
+        start_trip1, start_trip2 = start_trip2, start_trip1
+        length_trip1, length_trip2 = length_trip2, length_trip1
+        lfh_trip1, lfh_trip2 = lfh_trip2, lfh_trip1
+
+    # initialize new arrays
+    old_first_part = copy.deepcopy(solution.first_part)
+    combined_first_part = np.empty_like(old_first_part)
+
+    old_second_part = copy.deepcopy(solution.second_part)
+    combined_second_part = np.empty_like(old_second_part)
+
+    # create new array with combined trips
+    combined_first_part[:start_trip1] = old_first_part[:start_trip1]
+    combined_first_part[start_trip1:start_trip1 + lfh_trip2] = old_first_part[start_trip2:start_trip2 + lfh_trip2]
+    combined_first_part[start_trip1 + lfh_trip2:start_trip2 + lfh_trip2 - lfh_trip1] = old_first_part[start_trip1 + lfh_trip1:
+                                                                                                      start_trip2]
+    combined_first_part[start_trip2 + lfh_trip2 - lfh_trip1:start_trip2 + lfh_trip2] = old_first_part[start_trip1:
+                                                                                                      start_trip1 + lfh_trip1]
+    combined_first_part[start_trip2 + lfh_trip2:] = old_first_part[start_trip2 + lfh_trip2:]
+
+    # get vehicles of the two trips
+    vehicle1 = old_second_part[start_trip1]
+    vehicle2 = old_second_part[start_trip2]
+
+    # update vehicles in second part
+    combined_second_part[:start_trip1] = old_second_part[:start_trip1]
+    combined_second_part[start_trip1:start_trip1 + lfh_trip2] = vehicle1
+    combined_second_part[start_trip1 + lfh_trip2:start_trip2 + lfh_trip2 - lfh_trip1] = old_second_part[start_trip1 + lfh_trip1:
+                                                                                                        start_trip2]
+    combined_second_part[start_trip2 + lfh_trip2 - lfh_trip1:start_trip2 + lfh_trip2] = vehicle2
+    combined_second_part[start_trip2 + lfh_trip2:] = old_second_part[start_trip2 + lfh_trip2:]
+
+    # update solution
+    solution.set_first_part(combined_first_part)
+    solution.set_second_part(combined_second_part)

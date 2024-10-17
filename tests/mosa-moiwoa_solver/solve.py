@@ -66,4 +66,18 @@ if __name__ == "__main__":
     print(final_solutions)
     print("\n")
 
-    # TODO: check solutions in some way
+    # compute metrics
+    objectives = solver.return_objectives(stage="final")
+
+    normalized_MID = compute_normalized_MID(problem_params, objectives=objectives)
+    RASO = compute_RASO(problem_params, objectives=objectives)
+    distance = compute_distance(problem_params, objectives=objectives)
+
+    print("Evaluation metrics:")
+    print("\tNormalized MID: ", normalized_MID)
+    print("\tRASO: ", RASO)
+    print("\tDistance: ", distance)
+
+    print("Objectives:")
+    for obj in objectives:
+        print(obj)

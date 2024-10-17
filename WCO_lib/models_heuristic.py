@@ -4,7 +4,6 @@ import copy
 
 from .params import ProblemParams
 from .mutations import (edge_swap,
-                        trip_swap,
                         trip_shuffle,
                         trip_reverse,
                         trip_combine)
@@ -69,6 +68,23 @@ class SinglePeriodVectorSolution:
         # only to check feasibility of updated solutions
         self.min_capacities = None
 
+    def __eq__(self, other):
+        """
+        Check if two solutions are equal.
+
+        Only first and second part are checked.
+        """
+        if not isinstance(other, SinglePeriodVectorSolution):
+            return False
+
+        if np.any(self.first_part != other.first_part):
+            return False
+
+        if np.any(self.second_part != other.second_part):
+            return False
+
+        return True
+
     def set_first_part(self, first_part: np.ndarray):
         """
         Set the first part of the solution to a given vector.
@@ -78,7 +94,7 @@ class SinglePeriodVectorSolution:
             assert first_part.shape[0] == self.second_part.shape[0], "First part must have the same size as the second part."
 
         # set first part of the solution to a given vector
-        self.first_part = first_part
+        self.first_part = copy.deepcopy(first_part)
 
     def set_second_part(self, second_part: np.ndarray):
         """
@@ -89,7 +105,7 @@ class SinglePeriodVectorSolution:
             assert second_part.shape[0] == self.first_part.shape[0], "Second part must have the same size as the first part."
 
         # set second part of the solution to a given vector
-        self.second_part = second_part
+        self.second_part = copy.deepcopy(second_part)
 
     def adjust_first_part(self, problem_params: ProblemParams):
         """
@@ -409,7 +425,6 @@ class SinglePeriodVectorSolution:
         """
         # choose mutation operator
         mutation_type = np.random.choice(["edge_swap",
-                                          "trip_swap",
                                           "trip_shuffle",
                                           "trip_reverse",
                                           "trip_combine"])
@@ -417,8 +432,6 @@ class SinglePeriodVectorSolution:
         # apply mutation operator
         if mutation_type == "edge_swap":
             edge_swap(self)
-        elif mutation_type == "trip_swap":
-            trip_swap(self)
         elif mutation_type == "trip_shuffle":
             trip_shuffle(self)
         elif mutation_type == "trip_reverse":

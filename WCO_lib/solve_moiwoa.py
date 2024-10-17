@@ -1,16 +1,11 @@
 import numpy as np
-from deap import creator, base, tools
 import copy
 
 from .params import ProblemParams, MosaMoiwoaSolverParams
 from .models_heuristic import (SinglePeriodVectorSolution,
                                generate_heuristic_solution,
                                MOSA)
-
-
-# create DEAP classes for non-dominated sorting
-creator.create("FitnessMinMulti", base.Fitness, weights=(-1.0, -1.0, -1.0, -1.0))
-creator.create("Individual", np.ndarray, fitness=creator.FitnessMinMulti)
+from .evaluate import sort_solutions
 
 
 def compute_fitness(objectives: np.ndarray, avg_objectives: np.ndarray) -> np.float64:
@@ -43,43 +38,6 @@ def compute_n_seeds(fitness: float,
     S = S_min + (S_max - S_min) * (fitness - min_fitness) / (min_fitness - max_fitness)
 
     return round(S)
-
-
-def sort_seeds(objective_values: list) -> list:
-    """
-    Sort the seed population with non-dominated sorting and crowding distance.
-    """
-    sorted_seeds_idx = []
-
-    # create DEAP individuals and assign fitness values
-    individuals = [creator.Individual(objectives) for objectives in objective_values]
-    for ind in individuals:
-        ind.fitness.values = tuple(ind)
-
-    # apply non-dominated sorting
-    fronts = tools.sortNondominated(individuals, len(individuals), first_front_only=False)
-
-    # sort seeds by fronts and crowding distance
-    for front in fronts:
-        if len(front) == 1:
-            front_idx = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
-            sorted_seeds_idx.append(front_idx[0])
-
-        elif len(front) > 1:
-            # compute crowding distance
-            tools.emo.assignCrowdingDist(front)
-            for ind in front:
-                if np.isinf(ind.fitness.crowding_dist):
-                    ind.fitness.crowding_dist = 1e6
-
-            # sort front by crowding distance
-            front.sort(key=lambda ind: ind.fitness.crowding_dist, reverse=True)
-
-            # extract sorted indices
-            front_sorted = [np.where(np.all(np.array(individuals) == fit, axis=1))[0][0] for fit in front]
-            sorted_seeds_idx.extend(front_sorted)
-
-    return sorted_seeds_idx
 
 
 def MOIWOA(initial_seeds: list,
@@ -174,7 +132,7 @@ def MOIWOA(initial_seeds: list,
         # truncate seed population if larger than upper limit
         if len(current_seeds) > N_max:
             # apply non-dominated sorting
-            sorted_seeds_idx = sort_seeds(current_objectives_values)
+            sorted_seeds_idx, _ = sort_solutions(current_objectives_values)
 
             # truncate seed population
             current_seeds = [current_seeds[i] for i in sorted_seeds_idx[:N_max]]
@@ -187,7 +145,19 @@ def MOIWOA(initial_seeds: list,
 
         n_iter += 1
 
-    return current_seeds
+    # remove duplicate solutions
+    current_seeds_unique = []
+    current_objectives_values_unique = []
+    for i in range(len(current_seeds)):
+        if current_seeds[i] not in current_seeds_unique:
+            current_seeds_unique.append(current_seeds[i])
+            current_objectives_values_unique.append(current_objectives_values[i])
+
+    # retain only solutions in the first Pareto front
+    _, first_front_idx = sort_solutions(current_objectives_values_unique)
+    first_front_seeds = [current_seeds_unique[i] for i in first_front_idx]
+
+    return first_front_seeds
 
 
 class MosaMoiwoaSolver:
@@ -274,5 +244,40 @@ class MosaMoiwoaSolver:
 
         return solutions_dicts
 
-    # TODO: implementare metodo per convertire (e ritornare) soluzioni nella stessa
-    #       forma dell'epsilon-solver
+    def return_objectives(self, stage: str = "final") -> list:
+        """
+        Return objectives of the solutions found at the requested stage.
+        Objectives are returnes in the form of a list of arrays, where each array
+        containes the objectives of a solution.
+        """
+        assert stage in ["initial", "MOSA", "final"], "Invalid stage argument: valid values are 'initial', 'MOSA' and 'final'."
+
+        # get requested solutions
+        solutions = None
+        if stage == "initial":
+            solutions = copy.deepcopy(self.initial_solutions)
+        elif stage == "MOSA":
+            solutions = copy.deepcopy(self.MOSA_solutions)
+        elif stage == "final":
+            solutions = copy.deepcopy(self.final_solutions)
+
+        assert solutions is not None, "Requested solutions have not been computed yet."
+
+        # compute objectives for each solution
+        objectives = []
+        for solution in solutions:
+
+            obj = np.zeros(4)
+            for period_solution in solution:
+                # make sure quantities updated
+                period_solution.update_quantities(self.problem_params)
+
+                # compute objectives
+                period_solution.compute_objectives(self.problem_params)
+
+                # add objectives to total
+                obj += period_solution.objectives
+
+            objectives.append(obj)
+
+        return objectives

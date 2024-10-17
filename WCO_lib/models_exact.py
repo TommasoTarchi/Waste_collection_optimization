@@ -3,6 +3,7 @@ import numpy as np
 
 from .params import ProblemParams
 from .subtours import add_subtours_constraint
+from .evaluate import sort_solutions
 
 
 class BaseModel:
@@ -572,55 +573,3 @@ class SingleObjectModelMain(SingleObjectModel0):
         lin_expr_part = gb.LinExpr([(1.0, self.WT[k, t]) for k in range(K) for t in range(T)])
         lin_expr = T * K - lin_expr_part / self.problem_params.T_max
         self.model.addConstr(lin_expr <= self.eps3)
-
-
-def compute_objective0(theta: float,
-                       c: np.ndarray,
-                       cv: np.ndarray,
-                       existing_edges: list,
-                       x: np.ndarray,
-                       u: np.ndarray) -> float:
-    """
-    Compute the value of the objective function Z_0 (Z_1 in the original paper).
-    """
-    obj = 0
-
-    # first term
-    partial_sums = np.sum(x, axis=(0, 1, 2))
-    for (count, (i, j)) in enumerate(existing_edges):
-        obj += c[i, j] * partial_sums[count]
-    obj *= theta
-
-    # second term
-    obj += cv @ np.sum(u, axis=1)
-
-    return obj
-
-
-def compute_objective1(G: np.ndarray, existing_edges: list, x: np.ndarray) -> float:
-    """
-    Compute the value of the objective function Z_1 (Z_2 in the original paper).
-    """
-    obj = 0
-    partial_sums = np.sum(x, axis=(0, 1, 2))
-    for (count, (i, j)) in enumerate(existing_edges):
-        obj += G[i, j] * partial_sums[count]
-
-    return obj
-
-
-def compute_objective2(sigma: float, u: np.ndarray) -> float:
-    """
-    Compute the value of the objective function Z_2 (Z_3 in the original paper).
-    """
-    return sigma * np.sum(u)
-
-
-def compute_objective3(T_max: float,
-                       num_vehicles: int,
-                       num_periods: int,
-                       WT: np.ndarray) -> float:
-    """
-    Compute the value of the objective function Z_3 (Z_4 in the original paper).
-    """
-    return num_vehicles * num_periods - float(np.sum(WT)) / T_max

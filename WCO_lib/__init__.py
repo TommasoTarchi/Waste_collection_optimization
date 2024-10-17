@@ -12,4 +12,7 @@ from .models_heuristic import (SinglePeriodVectorSolution,
                                MOSA)
 from .solve_epsilon import EpsilonSolver
 from .solve_moiwoa import MOIWOA, MosaMoiwoaSolver
-from .evaluate import compute_normalized_MID, compute_RASO, compute_distance
+from .evaluate import (sort_solutions,
+                       compute_normalized_MID,
+                       compute_RASO,
+                       compute_distance)

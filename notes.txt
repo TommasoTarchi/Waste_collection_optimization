@@ -48,3 +48,7 @@
   della feasibility delle soluzioni nella prima fase (euristica e MOSA)), e che, essendo randomico,
   a volte potrebbe non funzionare (controllare che quest'ultimo fatto sia vero).
 - Citare vari paper anche in Implementation_details.pdf.
+
+- RISOLVERE PROBLEMA PER CUI MOSA-MOIWOA NON FUNZIONA CON NUM_PERIODS > 1.
+- CAPIRE PERCHÉ VIENE TERZO OGGETTO SEMPRE UGUALE A 1 PER LE PARETO SOLUTIONS NEL MODELLO APPROSSIMATO,
+  MENTRE DOVREBBE ESSERE 0 COME NELL'EPSILON SOLVER.

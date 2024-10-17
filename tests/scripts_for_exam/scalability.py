@@ -88,9 +88,9 @@ if __name__ == "__main__":
         pareto_solutions = solver.return_pareto_solutions()
 
         # compute metrics
-        normalized_MID = compute_normalized_MID(params, pareto_solutions)
-        RASO = compute_RASO(params, pareto_solutions)
-        distance = compute_distance(params, pareto_solutions)
+        normalized_MID = compute_normalized_MID(params, solutions=pareto_solutions)
+        RASO = compute_RASO(params, solutions=pareto_solutions)
+        distance = compute_distance(params, solutions=pareto_solutions)
 
         # compute profiling
         time_single_obj = t1 - t0

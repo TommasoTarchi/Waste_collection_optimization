@@ -7,11 +7,12 @@ from .models_exact import (SingleObjectModel0,
                            SingleObjectModel1,
                            SingleObjectModel2,
                            SingleObjectModel3,
-                           SingleObjectModelMain,
-                           compute_objective0,
-                           compute_objective1,
-                           compute_objective2,
-                           compute_objective3)
+                           SingleObjectModelMain)
+from .evaluate import (compute_objective0,
+                       compute_objective1,
+                       compute_objective2,
+                       compute_objective3,
+                       sort_solutions)
 
 
 class EpsilonSolver:
@@ -153,8 +154,58 @@ class EpsilonSolver:
             model_status.append(model.return_status())
             #model.return_slack()  # FOR DEBUGGING
 
-        # save Pareto solutions
-        self.pareto_solutions = pareto_solutions
+        # remove duplicate solutions
+        pareto_solutions_unique = []
+        for solution in pareto_solutions:
+
+            add = True
+            for solution_unique in pareto_solutions_unique:
+                if (np.all(solution["x"] == solution_unique["x"])
+                    and np.all(solution["y"] == solution_unique["y"])
+                    and np.all(solution["u"] == solution_unique["u"])
+                    and np.all(np.abs(solution["LT"] - solution_unique["LT"] < 1e-6))
+                    and np.all(np.abs(solution["UT"] - solution_unique["UT"] < 1e-6))
+                    and np.all(np.abs(solution["WT"] - solution_unique["WT"] < 1e-6))):
+
+                    add = False
+                    break
+            if add:
+                pareto_solutions_unique.append(solution)
+
+        # compute objectives for all unique Pareto solutions
+        pareto_objectives = []
+        for solution in pareto_solutions_unique:
+            obj0 = compute_objective0(self.problem_params.theta,
+                                      self.problem_params.c,
+                                      self.problem_params.cv,
+                                      self.problem_params.existing_edges,
+                                      solution["x"],
+                                      solution["u"])
+            obj1 = compute_objective1(self.problem_params.G,
+                                      self.problem_params.existing_edges,
+                                      solution["x"])
+            obj2 = (self.problem_params.sigma
+                    * self.problem_params.num_vehicles
+                    * self.problem_params.num_periods
+                    - compute_objective2(self.problem_params.sigma, solution["u"]))
+            obj3 = compute_objective3(self.problem_params.T_max,
+                                      self.problem_params.num_vehicles,
+                                      self.problem_params.num_periods,
+                                      solution["WT"])
+
+            pareto_objectives.append([obj0, obj1, obj2, obj3])
+
+        # retain only first Pareto front solutions
+        _, first_front_indices = sort_solutions(pareto_objectives)
+
+        ############################
+        first_front_objectives = [pareto_objectives[i] for i in first_front_indices]
+        print("Objectives:")
+        for obj in first_front_objectives:
+            print(obj)
+        ############################
+
+        self.pareto_solutions = [pareto_solutions_unique[i] for i in first_front_indices]
 
         # save status of the model
         self.model_status = model_status

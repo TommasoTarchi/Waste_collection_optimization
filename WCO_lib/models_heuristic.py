@@ -107,30 +107,6 @@ class SinglePeriodVectorSolution:
         # set second part of the solution to a given vector
         self.second_part = copy.deepcopy(second_part)
 
-    def adjust_first_part(self, problem_params: ProblemParams):
-        """
-        Adjust the first part of the solution to satisfy constraints.
-        """
-        assert False, "This method has not been implemented yet."
-
-        # check coherence
-        assert self.second_part is not None, "Second part must be set before the first part is adjusted."
-
-        # compute first part
-        # TODO
-
-    def adjust_second_part(self, problem_params: ProblemParams):
-        """
-        Adjust the second part of the solution to satisfy constraints.
-        """
-        assert False, "This method has not been implemented yet."
-
-        # check coherence
-        assert self.first_part is not None, "First part must be set before the second part is adjusted."
-
-        # compute second part
-        # TODO
-
     def init_heuristic(self, problem_params: ProblemParams):
         """
         Initialize the solution with a heuristic.
@@ -188,7 +164,7 @@ class SinglePeriodVectorSolution:
             next_service_time = np.sum([problem_params.t[shortest_path_tonextstart[j][0],
                                                          shortest_path_tonextstart[j][1]]
                                         for j in range(len(shortest_path_tonextstart))])  # time to go to required edge
-            next_service_time += compute_service_time(problem_params.d[next_start, next_end],
+            next_service_time += compute_service_time(problem_params.d[next_start, next_end, self.period],
                                                       problem_params.t[next_start, next_end],
                                                       problem_params.ul,
                                                       problem_params.uu)  # add time for service of required edge
@@ -202,7 +178,7 @@ class SinglePeriodVectorSolution:
 
             # compute remaining capacity for possible next position
             next_capacity = update_capacity(capacities[current_vehicle],
-                                            problem_params.d[next_start, next_end])
+                                            problem_params.d[next_start, next_end, self.period])
 
             # serve next required edge with current vehicle
             if ((service_times[current_vehicle] + next_service_time_tot) < problem_params.T_max
@@ -336,14 +312,17 @@ class SinglePeriodVectorSolution:
                                                                shortest_path_tostart[j][1]]
                                               for j in range(len(shortest_path_tostart))])
             service_times[vehicle] += compute_service_time(problem_params.d[required_start,
-                                                                            required_end],
+                                                                            required_end,
+                                                                            self.period],
                                                            problem_params.t[required_start,
                                                                             required_end],
                                                            problem_params.ul,
                                                            problem_params.uu)
 
             capacities[vehicle] = update_capacity(capacities[vehicle],
-                                                  problem_params.d[required_start, required_end])
+                                                  problem_params.d[required_start,
+                                                                   required_end,
+                                                                   self.period])
 
             if capacities[vehicle] < min_capacities[vehicle]:
                 min_capacities[vehicle] = capacities[vehicle]
@@ -367,7 +346,7 @@ class SinglePeriodVectorSolution:
             # check if vehicle has to go to disposal site
             if (i == self.first_part.shape[0]-1 or
                 self.second_part[i+1] != self.second_part[i] or
-                problem_params.d[next_required_edge[0], next_required_edge[1]] > capacities[vehicle]):
+                problem_params.d[next_required_edge[0], next_required_edge[1], self.period] > capacities[vehicle]):
 
                 # compute shortest path from current position to disposal site
                 shortest_path_todisp = find_shortest_path(problem_params.graph,
@@ -507,12 +486,12 @@ def acceptance_probability(current_objective_functions: np.ndarray,
     assert current_objective_functions.shape == ngbr_objective_functions.shape, "Objective functions must have the same shape."
 
     # compute average difference between objective functions
-    diff = np.mean(current_objective_functions - ngbr_objective_functions)
+    diff = np.abs(np.mean(current_objective_functions - ngbr_objective_functions))
 
     # compute acceptance probability
     prob = np.exp(-diff / (K * T))
 
-    return min(1, prob)
+    return prob
 
 
 def MOSA(initial_solution: list,
@@ -523,9 +502,10 @@ def MOSA(initial_solution: list,
          alpha: float = 0.9,
          K: float = 70.0) -> list:
     """
-    Apply Multi-Objective Simulated Annealing (MOSA) to a (single) initial solution.
+    Apply Multi-Objective Simulated Annealing (MOSA) to a (single) initial solution
+    (intended as list of period solutions).
     """
-    T = T_0
+    T = T_0  # temperature
     current_solution = copy.deepcopy(initial_solution)
 
     # compute objective functions for the current solution

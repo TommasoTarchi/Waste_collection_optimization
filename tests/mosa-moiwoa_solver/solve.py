@@ -27,6 +27,9 @@ if __name__ == "__main__":
     bounds_cv = (1, 3)
     bounds_G = (1, 3)
 
+    # set MOIWOA maximum number of iterations
+    MOIWOA_max_iter = 300
+
     # generate dataset
     generate_dataset(data_dir, bounds_c, bounds_d, bounds_t, bounds_cv, bounds_G)
 
@@ -41,6 +44,7 @@ if __name__ == "__main__":
 
     # set problem
     solver_params = MosaMoiwoaSolverParams()
+    solver_params.MOIWOA_max_iter = MOIWOA_max_iter
     solver = MosaMoiwoaSolver(problem_params, solver_params)
 
     print("Problem set.\n")
@@ -74,6 +78,7 @@ if __name__ == "__main__":
     distance = compute_distance(problem_params, objectives=objectives)
 
     print("Evaluation metrics:")
+    print("\tNumber of Pareto solutions: ", len(final_solutions))
     print("\tNormalized MID: ", normalized_MID)
     print("\tRASO: ", RASO)
     print("\tDistance: ", distance)

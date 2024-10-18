@@ -40,6 +40,7 @@ def compute_n_seeds(fitness: float,
     return round(S)
 
 
+# TODO: aggiungere altri stopping criteria
 def MOIWOA(initial_seeds: list,
            problem_params: ProblemParams,
            S_min: float = 9.0,

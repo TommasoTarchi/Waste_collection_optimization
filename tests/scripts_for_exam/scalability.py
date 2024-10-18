@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # initialize lists for profiling and evaluation metrics
     profiling = [["size", "time_single_obj", "time_comp_epsilon", "time_multi_obj", "total_time"]]
-    metrics = [["size", "normalized_MID", "RASO", "distance"]]
+    metrics = [["size", "NOS", "normalized_MID", "RASO", "distance"]]
 
     # iterate over problems
     for data_path, size in zip(dir_list_paths, dir_list_sorted):
@@ -88,6 +88,7 @@ if __name__ == "__main__":
         pareto_solutions = solver.return_pareto_solutions()
 
         # compute metrics
+        NOS = len(pareto_solutions)
         normalized_MID = compute_normalized_MID(params, solutions=pareto_solutions)
         RASO = compute_RASO(params, solutions=pareto_solutions)
         distance = compute_distance(params, solutions=pareto_solutions)
@@ -123,6 +124,7 @@ if __name__ == "__main__":
             f.write("Total time for rsolution: " + str(total_time) + " seconds\n")
 
             f.write("\nEVALUATION METRICS:\n")
+            f.write("Number of Pareto solutions: " + str(NOS) + "\n")
             f.write("Normalized mid for pareto solutions: " + str(normalized_MID) + "\n")
             f.write("Raso for pareto solutions: " + str(RASO) + "\n")
             f.write("Distance for pareto solutions: " + str(distance) + "\n\n")
@@ -135,9 +137,12 @@ if __name__ == "__main__":
             for solution in pareto_solutions:
                 f.write("Solution " + str(solution_count) + ":\n")
                 for t in range(params.num_periods):
-                    f.write("\tNumber of employed vehicles in period " + str(t) + ": " + str(np.sum(solution["u"][:, t] > 0)) + "\n")
-                    f.write("\tTotal number of traversings in period " + str(t) + ": " + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
-                    f.write("\tTotal number of served edges in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
+                    f.write("\tNumber of employed vehicles in period " + str(t) + ": "
+                            + str(np.sum(solution["u"][:, t] > 0)) + "\n")
+                    f.write("\tTotal number of traversings in period " + str(t) + ": "
+                            + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
+                    f.write("\tTotal number of served edges in period " + str(t) + ": "
+                            + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
                     for k in range(params.num_vehicles):
                         f.write("\tVehicle " + str(k) + ":\n")
                         for p in range(params.num_required_edges):
@@ -149,7 +154,7 @@ if __name__ == "__main__":
         # save profiling and evaluation metrics
         profiling.append([size, time_single_obj, time_comp_epsilon, time_multi_obj, total_time])
 
-        metrics.append([size, normalized_MID, RASO, distance])
+        metrics.append([size, NOS, normalized_MID, RASO, distance])
 
     # write profiling and evaluation metrics to csv files
     with open(os.path.join(output_dir, "profiling.txt"), 'w', newline='') as f:
@@ -177,9 +182,18 @@ if __name__ == "__main__":
     # plot evaluation metrics
     rows = metrics[1:]
 
-    normalized_MID_values = [row[1] for row in rows]
-    RASO_values = [row[2] for row in rows]
-    distance_values = [row[3] for row in rows]
+    NOS_values = [row[1] for row in rows]
+    normalized_MID_values = [row[2] for row in rows]
+    RASO_values = [row[3] for row in rows]
+    distance_values = [row[4] for row in rows]
+
+    plt.plot(sizes, NOS_values, marker='o', linestyle='-', color='b', label='Number of Pareto solutions')
+    plt.xlabel('Size')
+    plt.ylabel('Number of Pareto solutions')
+    plt.title('Number of Pareto solutions')
+
+    plt.savefig(os.path.join(output_dir, "plots", "NOS.png"))
+    plt.close()
 
     plt.plot(sizes, normalized_MID_values, marker='o', linestyle='-', color='b', label='Normalized MID')
     plt.xlabel('Size')

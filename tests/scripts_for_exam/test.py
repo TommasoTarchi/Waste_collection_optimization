@@ -98,6 +98,7 @@ if __name__ == "__main__":
         f.write("\nGUROBI STATUS OF THE SOLVED MODELS: " + str(solver.return_status()) + "\n")
 
         f.write("\nEVALUATION METRICS:\n")
+        f.write("Number of Pareto solutions: " + str(len(pareto_solutions)) + "\n")
         f.write("Normalized MID for pareto solutions: " + str(compute_normalized_MID(params, solutions=pareto_solutions)) + "\n")
         f.write("RASO for pareto solutions: " + str(compute_RASO(params, solutions=pareto_solutions)) + "\n")
         f.write("Distance for pareto solutions: " + str(compute_distance(params, solutions=pareto_solutions)) + "\n")
@@ -107,9 +108,12 @@ if __name__ == "__main__":
         for solution in pareto_solutions:
             f.write("Solution " + str(solution_count) + ":\n")
             for t in range(params.num_periods):
-                f.write("\tNumber of employed vehicles in period " + str(t) + ": " + str(np.sum(solution["u"][:, t] > 0)) + "\n")
-                f.write("\tTotal number of traversings in period " + str(t) + ": " + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
-                f.write("\tTotal number of served edges in period " + str(t) + ": " + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
+                f.write("\tNumber of employed vehicles in period " + str(t) + ": "
+                        + str(np.sum(solution["u"][:, t] > 0)) + "\n")
+                f.write("\tTotal number of traversings in period " + str(t) + ": "
+                        + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
+                f.write("\tTotal number of served edges in period " + str(t) + ": "
+                        + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
                 for k in range(params.num_vehicles):
                     f.write("\tVehicle " + str(k) + ":\n")
                     for p in range(params.num_required_edges):

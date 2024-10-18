@@ -2,11 +2,13 @@ import numpy as np
 from math import sqrt
 from deap import creator, base, tools
 from typing import Optional, List, Dict
+import copy
 
 from .params import ProblemParams
 
 
 # TODO: controllare tutte le funzioni per evaluation metrics
+#       (RASO in particolare: a volte viene negativa)
 
 
 # create DEAP classes for non-dominated sorting
@@ -214,7 +216,7 @@ def compute_RASO(params: ProblemParams,
 
     # if objects provided, get them
     if objectives is not None:
-        objectives_list = objectives
+        objectives_list = copy.deepcopy(objectives)
 
         for obj in objectives_list:
             obj[2] += 1

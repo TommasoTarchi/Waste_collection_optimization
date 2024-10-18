@@ -3,7 +3,6 @@ import numpy as np
 
 from .params import ProblemParams
 from .subtours import add_subtours_constraint
-from .evaluate import sort_solutions
 
 
 class BaseModel:

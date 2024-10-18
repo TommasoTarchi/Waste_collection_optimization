@@ -33,18 +33,18 @@ def compute_good_parameters(num_edges: int,
     P = 0.3 * num_required_edges
 
     # compute good T_max
-    reference_T_max = 1.2 * P * num_edges * max_t / num_vehicles
-    good_params["T_max"] = 0.7 * reference_T_max
+    T_max = 1.2 * P * num_edges * max_t / num_vehicles
+    good_params["T_max"] = T_max
 
     # compute good ul and uu
-    max_ul_plus_uu = (reference_T_max * num_vehicles - P * num_edges * max_t) / (num_required_edges * max_d)
+    max_ul_plus_uu = (T_max * num_vehicles - P * num_edges * max_t) / (num_required_edges * max_d)
     ul_plus_uu = 0.8 * max_ul_plus_uu
     good_params["ul"] = 0.6 * ul_plus_uu
     good_params["uu"] = 0.4 * ul_plus_uu
 
     # compute good W
     max_W = num_required_edges * max_d / num_vehicles
-    good_params["W"] = 0.5 * max_W
+    good_params["W"] = 0.7 * max_W
 
     # compute good theta
     good_params["theta"] = avg_cv / (num_edges * avg_c)

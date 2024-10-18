@@ -1,54 +1,27 @@
-- Far notare come si sono aggiustate le soluzioni prodotte come "vicine" di quelle
-  prodotte dall'euristica.
-- Far notare quanto scarsa sia la descrizione dei metodi nel paper; quindi non siamo
-  sicuri di aver implementato esattamente lo stesso algoritmo degli autori.
-  Per esempio:
-  1. Non è chiaro come aggiustare le soluzioni dopo essere state perturbate in MOSA.
-  2. Non è chiaro come si debba fare l'annealing della temperatura.
-  3. Non è chiaro se in MOSA le perturbazioni debbano essere fatte globalmente su
-     tutti periodi contemporaneamente o separatamente su ogni periodo.
-  4. Non è specificata la probabilità usata in MOSA per l'accettazione delle soluzioni
-     non dominanti.
-  5. Non è chiaro come si debba calcolare la fitness in MOIWOA.
-  6. Non è chiaro come si debba ordinare le soluzioni con stesso grado di ottimalità
-     in MOIWOA.
-- Far notare che si è usata geometric cooling strategy e ... acceptance probability come
-  descritte nel paper salvato in docs/ (quello di Nam e Park non era disponibile).
-  Citare il paper.
-- Valutare se pesare la somma delle differenze tra objective functions nel calcolo della
-  acceptance probability e nel calcolo della fitness a seconda dell'importanza delle priorità
-  degli obiettivi.
 - Far notare che, anche se il fatto di far riprodurre le soluzioni in base alla fitness può
   favorire soluzioni non dominanti, il troncamento delle soluzioni in base all dominanza
   corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
   ecceda in numero massimo.
-- Eventualmente aggiungere altri stopping criteria.
-- Far notare che si sono aggiunti stopping criteria (citare paper da cui si sono presi).
-- Far notare che in MOSA l'algoritmo viene fermato quando non si ha miglioramento per un
-  certo numero di iterazioni oppure quando si raggiunge un numero massimo di iterazioni.
-- Valutare se cambiare il metodo di calcolo della fitness.
+- Eventualmente aggiungere altri stopping criteria e scriverli in Implementation_details.pdf.
+- Citare i paper da cui si sono presi la geometric cooling strategy (quello salvato in docs/)
+  l'acceptance probability (sempre quello) e gli eventuali stopping criteria.
+- Far notare che per MOSA-MOIWOA si sono usati i parametri consigliati nel paper (da taguchi
+  method).
 - Aggiungere README.
-- Far notare che il numero di epoche è ciò che rende l'ottimizzazione più onerosa computazionalmente,
-  quindi per la scalabilità si è considerato il caso con T=1 fisso, e poi a parte il caso in cui T
-  aumenta.
 - Far notare che i valori di epsilon si sono calcolati prendendo l'intervallo tra il best e il worst
   objective ma solo il sottointervallo tra 0.25 e 0.75. Far notare anche che l'oggetto calcolato con
   i risultati del modello stesso che lo ottimizzava è stato escluso.
 - Far notare che le formule per MID e RASO del paper sono dovute essere corrette perché uno degli
   objective è massimizzato. Far notare che si è anche normalizzato MID.
 - Far notare che nel metodo approssimato alla fine i veicoli tornano al deposito mentre in quello
-  esatto finiscono al disposal site.
-  In realtà per ora finiscono tutti al disposal site, ma si potrebbe cambiare.
+  esatto finiscono al disposal site (in realtà per ora finiscono tutti al disposal site, ma si
+  potrebbe cambiare).
 - Far notare che MOSA produce soluzioni non necessariamente con degli objectives migliori, ma
   sicuramente più vari (serve infatti ad 'esplorare' lo spazio delle soluzioni).
-- Capire se quando si calcola la acceptance probability bisogna fare la differenza tra
-  le objective functions del primo e del secondo o del secondo e del primo.
-- Capire come gestire il fatto che il modello approssimato ha bisogno di T_max e W maggiori per
-  funzionare (almeno per essere avviato, magari si potrebbe aggiungere una "tolleranza" al controllo
-  della feasibility delle soluzioni nella prima fase (euristica e MOSA)), e che, essendo randomico,
-  a volte potrebbe non funzionare (controllare che quest'ultimo fatto sia vero).
-- Citare vari paper anche in Implementation_details.pdf.
+- Far notare che il tempo di MOSA-MOIWOA varia molto a seconda dei run (dipende molto dall'inizializzazione
+  delle soluzioni con l'euristica, che è randomica).
+- Eventualmente fare un po' di statistica sui risultati di MOSA-MOIWOA (anche sul tempo!), perché è randomico.
+- Valutare se eliminare alla fine di MOSA-MOIWOA le soluzioni con oggetti negativi (o magari capire perché
+  vengono così).
 
-- RISOLVERE PROBLEMA PER CUI MOSA-MOIWOA NON FUNZIONA CON NUM_PERIODS > 1.
-- CAPIRE PERCHÉ VIENE TERZO OGGETTO SEMPRE UGUALE A 1 PER LE PARETO SOLUTIONS NEL MODELLO APPROSSIMATO,
-  MENTRE DOVREBBE ESSERE 0 COME NELL'EPSILON SOLVER.
+- Rigenerare tutti dataset per esame con nuovi good parameters.

@@ -296,6 +296,13 @@ class BaseModel:
         # optimize model
         self.model.optimize()
 
+        if self.model.status != gb.GRB.OPTIMAL:
+
+            # set flag to True for other methods
+            self.model_solved = True
+
+            return None
+
         # get best solutions
         x_out = self.model.getAttr("x", self.x)
         y_out = self.model.getAttr("x", self.y)
@@ -337,6 +344,10 @@ class BaseModel:
         """
         if not self.model_solved:
             raise Exception("ERROR: model was not solved. Please run 'model.solve()' before retrieving objective.")
+
+        elif self.model.status != gb.GRB.OPTIMAL:
+            print(f"No optimal solution found - status of the optimization: {self.model.status}.")
+            return None
 
         return self.model.objVal
 

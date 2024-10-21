@@ -7,10 +7,6 @@ import copy
 from .params import ProblemParams
 
 
-# TODO: controllare tutte le funzioni per evaluation metrics
-#       (RASO in particolare: a volte viene negativa)
-
-
 # create DEAP classes for non-dominated sorting
 creator.create("FitnessMinMulti", base.Fitness, weights=(-1.0, -1.0, -1.0, -1.0))
 creator.create("Individual", np.ndarray, fitness=creator.FitnessMinMulti)
@@ -127,9 +123,13 @@ def compute_normalized_MID(params: ProblemParams,
                            objectives: Optional[List] = None) -> float:
     """
     Function to compute mean of ideal distance (MID) of a set of solutions.
+    MID is normalized by both maximum objective values and number of solutions.
 
     The metric can be computed starting from either the solution or the pre-computed
     objectives.
+
+    NOTICE: if objectives are provided, the third objective is assumed to be modified
+    for minimization.
     """
     if ((objectives is not None and solutions is not None)
         or (objectives is None and solutions is None)):
@@ -143,20 +143,30 @@ def compute_normalized_MID(params: ProblemParams,
 
     MID = 0.0
 
-    # if objects provided
+    # if objectives provided
     if objectives is not None:
+        objectives_array = np.array(objectives)
+
+        # compute maximum values for rescaling
+        max_obj = np.max(objectives_array, axis=0)
+        for i in range(4):
+            if max_obj[i] == 0:
+                max_obj[i] = 1
+
+        # add objectives to MID
         for obj in objectives:
-            # compute maximum value for rescaling
-            max_obj = np.max(obj)
-
-            # add minimization objectives to MID
-            MID += (obj[0] / max_obj) ** 2 + (obj[1] / max_obj) ** 2 + (obj[3] / max_obj) ** 2
-
-            # add maximization objective to MID
-            MID += ((params.sigma * params.num_vehicles * params.num_periods - obj[2]) / max_obj) ** 2
+            MID += sqrt((obj[0] / max_obj[0]) ** 2 +
+                        (obj[1] / max_obj[1]) ** 2 +
+                        (obj[2] / max_obj[2]) ** 2 +
+                        (obj[3] / max_obj[3]) ** 2)
 
     # if solutions provided
     elif solutions is not None:
+        obj0 = []
+        obj1 = []
+        obj2 = []
+        obj3 = []
+
         for solution in solutions:
             # get solution values
             x = solution["x"]
@@ -164,32 +174,34 @@ def compute_normalized_MID(params: ProblemParams,
             WT = solution["WT"]
 
             # compute objectives
-            obj0 = compute_objective0(params.theta,
-                                      params.c,
-                                      params.cv,
-                                      params.existing_edges,
-                                      x,
-                                      u)
-            obj1 = compute_objective1(params.G, params.existing_edges, x)
-            obj2 = compute_objective2(params.sigma, u)
-            obj3 = compute_objective3(params.T_max,
-                                      params.num_vehicles,
-                                      params.num_periods,
-                                      WT)
+            obj0.append(compute_objective0(params.theta,
+                                           params.c,
+                                           params.cv,
+                                           params.existing_edges,
+                                           x,
+                                           u))
+            obj1.append(compute_objective1(params.G, params.existing_edges, x))
+            obj2.append(params.sigma * params.num_vehicles * params.num_periods
+                        - compute_objective2(params.sigma, u))
+            obj3.append(compute_objective3(params.T_max,
+                                           params.num_vehicles,
+                                           params.num_periods,
+                                           WT))
 
-            # compute maximum value for rescaling
-            max_obj = max(obj0,
-                          obj1,
-                          params.sigma * params.num_vehicles * params.num_periods - obj2,
-                          obj3)
+        # compute maximum values for rescaling
+        max_obj = [max(obj0), max(obj1), max(obj2), max(obj3)]
+        for i in range(4):
+            if max_obj[i] == 0:
+                max_obj[i] = 1
 
-            # add minimization objectives to MID
-            MID += (obj0 / max_obj) ** 2 + (obj1 / max_obj) ** 2 + (obj3 / max_obj) ** 2
+        # add objectives to MID
+        for i in range(NOS):
+            MID += sqrt((obj0[i] / max_obj[0]) ** 2 +
+                        (obj1[i] / max_obj[1]) ** 2 +
+                        (obj2[i] / max_obj[2]) ** 2 +
+                        (obj3[i] / max_obj[3]) ** 2)
 
-            # add maximization objective to MID
-            MID += ((params.sigma * params.num_vehicles * params.num_periods - obj2) / max_obj) ** 2
-
-    return sqrt(MID) / NOS
+    return MID / NOS
 
 
 def compute_RASO(params: ProblemParams,
@@ -200,6 +212,9 @@ def compute_RASO(params: ProblemParams,
 
     The metric can be computed starting from either the solution or the pre-computed
     objectives.
+
+    NOTICE: if objectives are provided, the third objective is assumed to be modified
+    for minimization.
     """
     if ((objectives is not None and solutions is not None)
         or (objectives is None and solutions is None)):
@@ -214,7 +229,7 @@ def compute_RASO(params: ProblemParams,
     RASO = 0.0
     objectives_list = []
 
-    # if objects provided, get them
+    # if objectives provided, get them
     if objectives is not None:
         objectives_list = copy.deepcopy(objectives)
 
@@ -247,9 +262,9 @@ def compute_RASO(params: ProblemParams,
         min_obj = min(obj)
 
         # correct for division by zero
-        for i in range(len(obj)):
-            if obj[i] == 0:
-                obj[i] = 1e-6
+        #for i in range(len(obj)):
+        #    if obj[i] == 0:
+        #        obj[i] = 1e-6
 
         RASO += sum(obj) / min_obj - 4
 
@@ -264,18 +279,22 @@ def compute_distance(params: ProblemParams,
 
     The metric can be computed starting from either the solution or the pre-computed
     objectives.
+
+    NOTICE: if objectives are provided, the third objective is assumed to be modified
+    for minimization.
     """
     if ((objectives is not None and solutions is not None)
         or (objectives is None and solutions is None)):
         raise ValueError("Either solutions or objectives must be provided.")
 
     D = 0.0
+
     obj0 = []
     obj1 = []
     obj2 = []
     obj3 = []
 
-    # if objects provided, get them
+    # if objectives provided, get them
     if objectives is not None:
         for obj in objectives:
             obj0.append(obj[0])

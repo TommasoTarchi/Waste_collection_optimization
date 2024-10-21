@@ -1,6 +1,5 @@
 import sys
 import os
-import numpy as np
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if library_path not in sys.path:
@@ -28,7 +27,7 @@ if __name__ == "__main__":
     bounds_G = (1, 3)
 
     # set MOIWOA maximum number of iterations
-    MOIWOA_max_iter = 300
+    MOIWOA_max_iter = 100
 
     # generate dataset
     generate_dataset(data_dir, bounds_c, bounds_d, bounds_t, bounds_cv, bounds_G)

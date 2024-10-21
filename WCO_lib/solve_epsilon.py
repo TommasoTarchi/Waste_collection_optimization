@@ -1,4 +1,5 @@
 import numpy as np
+import gurobipy as gb
 from itertools import product
 from typing import List
 
@@ -119,9 +120,8 @@ class EpsilonSolver:
         epsilons = []
         for i in range(1, 4):
             ordered_objectives = np.unique(self.objectives[i])
-            worst_best_dist = ordered_objectives[-1] - ordered_objectives[0]
-            epsilon_inf = ordered_objectives[0] + 0.25 * worst_best_dist
-            epsilon_sup = ordered_objectives[0] + 0.75 * worst_best_dist
+            epsilon_inf = ordered_objectives[0]
+            epsilon_sup = ordered_objectives[-1]
             if i == 2:
                 epsilon_inf, epsilon_sup = epsilon_sup, epsilon_inf
             epsilons.append(np.unique(np.linspace(epsilon_inf, epsilon_sup, num=num_epsilon)))
@@ -150,8 +150,9 @@ class EpsilonSolver:
                                           epsilons[2])
             model.set_up_model()
             model.solve()
-            pareto_solutions.append(model.return_best_solution())
-            model_status.append(model.return_status())
+            if model.return_status() == gb.GRB.OPTIMAL:
+                pareto_solutions.append(model.return_best_solution())
+                model_status.append(model.return_status())
             #model.return_slack()  # FOR DEBUGGING
 
         # remove duplicate solutions
@@ -197,13 +198,6 @@ class EpsilonSolver:
 
         # retain only first Pareto front solutions
         _, first_front_indices = sort_solutions(pareto_objectives)
-
-        ############################
-        first_front_objectives = [pareto_objectives[i] for i in first_front_indices]
-        print("Objectives:")
-        for obj in first_front_objectives:
-            print(obj)
-        ############################
 
         self.pareto_solutions = [pareto_solutions_unique[i] for i in first_front_indices]
 

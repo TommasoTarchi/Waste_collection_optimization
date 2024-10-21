@@ -40,7 +40,6 @@ def compute_n_seeds(fitness: float,
     return round(S)
 
 
-# TODO: aggiungere altri stopping criteria
 def MOIWOA(initial_seeds: list,
            problem_params: ProblemParams,
            S_min: float = 9.0,
@@ -250,6 +249,9 @@ class MosaMoiwoaSolver:
         Return objectives of the solutions found at the requested stage.
         Objectives are returnes in the form of a list of arrays, where each array
         containes the objectives of a solution.
+
+        NOTICE: the third objective is not the same as in the paper but it's adjusted
+        to be minimized.
         """
         assert stage in ["initial", "MOSA", "final"], "Invalid stage argument: valid values are 'initial', 'MOSA' and 'final'."
 

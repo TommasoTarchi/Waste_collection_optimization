@@ -217,7 +217,7 @@ class MosaMoiwoaSolverParams:
         self.MOIWOA_N_max: int = 100  # maximum number of solutions
         self.MOIWOA_max_iter: int = 300  # maximum number of iterations
 
-    def load_from_dir(self, params_path):
+    def load_from_file(self, params_path):
         # load parameters from json
         with open(params_path) as f:
             params = json.load(f)
@@ -245,7 +245,7 @@ class MosaMoiwoaSolverParams:
         # check coherence of parameters
         check_MosaMoiwoaSolverParams(self)
 
-    def save_to_dir(self, params_path):
+    def save_to_file(self, params_path):
         # save parameters to json
         with open(params_path, 'w') as f:
             params = {

@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 import time
 
-library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 if library_path not in sys.path:
     sys.path.append(library_path)
 
@@ -17,58 +17,58 @@ if __name__ == "__main__":
 
     # get number of epsilon values
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_epsilon", type=int, default=4)
+    parser.add_argument("--num_epsilon", type=int, default=8)
 
     args = parser.parse_args()
 
     num_epsilon = args.num_epsilon
 
+    print(f"Using epsilon-solver with number of epsilon values = {num_epsilon}.")
+
     # set output file
-    output_file = "./results/test/results_epsilon.txt"
+    output_file = "./results/test/results.txt"
 
     # set data path
-    data_dir = "./data/test/"
+    data_dir = "../datasets/test/"
 
     # load problem parameters
     params = ProblemParams()
     params.load_from_dir(data_dir)
 
-    print("Parameters loaded.\n")
+    print("Problem parameters loaded.")
 
     # set solver for problem
     solver = EpsilonSolver(params)
 
-    print("Problem set.\n")
-
-    t0 = time.perf_counter()
+    print("Problem set.")
 
     # solve single-objective problems
+    t0 = time.perf_counter()
     solver.solve_single_objectives()
-
     t1 = time.perf_counter()
 
+    print("Single-objective problems solved.")
+
     # compute epsilon values
-    solver.compute_epsilon(num_epsilon)
-
     t2 = time.perf_counter()
-
-    print("Epsilon values for epsilon-solver computed.\n")
-
+    solver.compute_epsilon(num_epsilon)
     t3 = time.perf_counter()
 
-    # solve multi-objective problem
-    solver.solve_multi_objective()
+    print("Epsilon values for epsilon-solver computed.")
 
+    # solve multi-objective problem
     t4 = time.perf_counter()
+    solver.solve_multi_objective()
+    t5 = time.perf_counter()
 
     pareto_solutions = solver.return_pareto_solutions()
 
-    print("Problem solved.\n")
+    print("Multi-objective problem solved.")
 
     # compute profiling
     time_single_obj = t1 - t0
-    time_comp_epsilon = t2 - t1
-    time_multi_obj = t4 - t3
+    time_comp_epsilon = t3 - t2
+    time_multi_obj = t5 - t4
 
     # print results summary
     with open(output_file, "w") as f:
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         f.write("Time for single-objective problems resolution: " + str(time_single_obj) + " seconds\n")
         f.write("Time for epsilon values computation: " + str(time_comp_epsilon) + " seconds\n")
         f.write("Time for final model resolution: " + str(time_multi_obj) + " seconds\n")
-        f.write("Total time for rsolution: " + str(time_single_obj + time_comp_epsilon + time_multi_obj) + " seconds\n")
+        f.write("Total time for resolution: " + str(time_single_obj + time_comp_epsilon + time_multi_obj) + " seconds\n")
 
         f.write("\nEDGES LIST: " + str(params.existing_edges) + "\n")
         f.write("REQUIRED EDGES LIST: " + str(params.required_edges) + "\n")

@@ -3,10 +3,10 @@
   corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
   ecceda in numero massimo.
 - Eventualmente aggiungere altri stopping criteria e scriverli in Implementation_details.pdf.
-- Citare i paper da cui si sono presi la geometric cooling strategy (quello salvato in docs/)
+- Citare i paper da cui si sono presi la geometric cooling strategy (quello salvato in docs/),
   l'acceptance probability (sempre quello) e gli eventuali stopping criteria.
-- Far notare che per MOSA-MOIWOA si sono usati i parametri consigliati nel paper (da taguchi
-  method).
+- Far notare che per MOSA-MOIWOA si sono usati i parametri consigliati nel paper (ottenuti con
+  taguchi method).
 - Aggiungere README.
 - Far notare che i valori di epsilon si sono calcolati prendendo l'intervallo tra il best e il worst
   objective ma solo il sottointervallo tra 0.25 e 0.75. Far notare anche che l'oggetto calcolato con
@@ -23,5 +23,14 @@
 - Eventualmente fare un po' di statistica sui risultati di MOSA-MOIWOA (anche sul tempo!), perché è randomico.
 - Valutare se eliminare alla fine di MOSA-MOIWOA le soluzioni con oggetti negativi (o magari capire perché
   vengono così).
+- Far notare che MOSA-MOIWOA solitamente raggiunge subito (già nelle prime 10 iterazioni) il numero massimo
+  di seed, il che è considerato (anche nel paper) un buon segno.
+- Scrivere descrizioni commentate all'inizio degli script per l'esame.
+- Togliere .gitkeep dalle directory in cui non serve.
+- Nel README aggiungere le istruzioni per risolvere un problema con i due modelli (step by step tutti metodi
+  da chiamare) e anche come leggere le soluzioni ottenute. Far notare che gli oggetti calcolati usando le
+  funzioni in evaluate sono come nel paper, mentre in quelli calcolati da dentro MOSA-MOIWOA il terzo oggetto
+  è modificato per minimizzazione.
 
-- Rigenerare tutti dataset per esame con nuovi good parameters.
+- Controllare tutte le funzioni per il calcolo delle metriche se siano corrette e anche se le metriche usate
+  abbiano senso.

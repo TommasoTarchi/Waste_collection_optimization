@@ -261,8 +261,6 @@ class SinglePeriodVectorSolution:
                                                                shortest_path_todisp[j][1]]
                                               for j in range(len(shortest_path_todisp))])
 
-            # TODO: capire se alla fine si deve tornare al deposito o no
-
         # save supplementary data
         self.service_times = service_times
         self.total_service_time = np.sum(service_times)

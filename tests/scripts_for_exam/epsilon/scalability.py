@@ -6,7 +6,7 @@ import csv
 import time
 import matplotlib.pyplot as plt
 
-library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 if library_path not in sys.path:
     sys.path.append(library_path)
 
@@ -29,17 +29,19 @@ if __name__ == "__main__":
 
     num_epsilon = args.num_epsilon
 
+    print(f"Using epsilon-solver with number of epsilon values = {num_epsilon}.")
+
     # get data directories
     data_dir = None
     output_dir = None
     if args.type == "graph":
-        data_dir = os.path.join("./data", "graph_scalability")
+        data_dir = os.path.join("../datasets", "graph_scalability")
         output_dir = "./results/graph_scalability/"
     elif args.type == "epoch":
-        data_dir = os.path.join("./data", "epoch_scalability")
+        data_dir = os.path.join("../datasets", "epoch_scalability")
         output_dir = "./results/epoch_scalability/"
     elif args.type == "vehicles":
-        data_dir = os.path.join("./data", "vehicles_scalability")
+        data_dir = os.path.join("../datasets", "vehicles_scalability")
         output_dir = "./results/vehicles_scalability/"
 
     # get all files in the directory
@@ -59,31 +61,40 @@ if __name__ == "__main__":
     profiling = [["size", "time_single_obj", "time_comp_epsilon", "time_multi_obj", "total_time"]]
     metrics = [["size", "NOS", "normalized_MID", "RASO", "distance"]]
 
+    # define type name fo standard output
+    type_name = None
+    if args.type == "graph":
+        type_name = "num_nodes"
+    elif args.type == "epoch":
+        type_name = "num_epochs"
+    elif args.type == "vehicles":
+        type_name = "num_vehicles"
+
     # iterate over problems
     for data_path, size in zip(dir_list_paths, dir_list_sorted):
         # get problem prameters
         params = ProblemParams()
         params.load_from_dir(data_path)
 
+        print(f"Solving problem with {type_name} = {size}.")
+
         # set solver for problem
         solver = EpsilonSolver(params)
 
-        t0 = time.perf_counter()
-
         # solve single-objective problems
+        t0 = time.perf_counter()
         solver.solve_single_objectives()
-
         t1 = time.perf_counter()
 
         # compute epsilon values
-        solver.compute_epsilon(num_epsilon)
-
         t2 = time.perf_counter()
+        solver.compute_epsilon(num_epsilon)
+        t3 = time.perf_counter()
 
         # solve multi-objective problem
+        t4 = time.perf_counter()
         solver.solve_multi_objective()
-
-        t3 = time.perf_counter()
+        t5 = time.perf_counter()
 
         pareto_solutions = solver.return_pareto_solutions()
 
@@ -95,9 +106,9 @@ if __name__ == "__main__":
 
         # compute profiling
         time_single_obj = t1 - t0
-        time_comp_epsilon = t2 - t1
-        time_multi_obj = t3 - t2
-        total_time = t3 - t0
+        time_comp_epsilon = t3 - t2
+        time_multi_obj = t5 - t4
+        total_time = time_multi_obj + time_single_obj + time_comp_epsilon
 
         # save pareto solutions
         output_solution_file = os.path.join(output_dir, size + "_solutions.txt")

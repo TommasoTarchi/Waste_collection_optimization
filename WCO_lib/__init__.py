@@ -13,6 +13,6 @@ from .models_heuristic import (SinglePeriodVectorSolution,
 from .solve_epsilon import EpsilonSolver
 from .solve_moiwoa import MOIWOA, MosaMoiwoaSolver
 from .evaluate import (sort_solutions,
-                       compute_normalized_MID,
+                       compute_MID,
                        compute_RASO,
                        compute_distance)

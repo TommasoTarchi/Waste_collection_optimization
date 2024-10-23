@@ -8,7 +8,7 @@ if library_path not in sys.path:
 from WCO_lib.dataset import generate_dataset
 from WCO_lib.params import ProblemParams, MosaMoiwoaSolverParams
 from WCO_lib.solve_moiwoa import MosaMoiwoaSolver
-from WCO_lib.evaluate import compute_normalized_MID, compute_RASO, compute_distance
+from WCO_lib.evaluate import compute_MID, compute_RASO, compute_distance
 
 
 if __name__ == "__main__":
@@ -72,13 +72,13 @@ if __name__ == "__main__":
     # compute metrics
     objectives = solver.return_objectives(stage="final")
 
-    normalized_MID = compute_normalized_MID(problem_params, objectives=objectives)
+    MID = compute_MID(problem_params, objectives=objectives)
     RASO = compute_RASO(problem_params, objectives=objectives)
     distance = compute_distance(problem_params, objectives=objectives)
 
     print("Evaluation metrics:")
     print("\tNumber of Pareto solutions: ", len(final_solutions))
-    print("\tNormalized MID: ", normalized_MID)
+    print("\tMID: ", MID)
     print("\tRASO: ", RASO)
     print("\tDistance: ", distance)
 

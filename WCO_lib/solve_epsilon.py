@@ -2,6 +2,7 @@ import numpy as np
 import gurobipy as gb
 from itertools import product
 from typing import List
+import copy
 
 from .params import ProblemParams
 from .models_exact import (SingleObjectModel0,
@@ -79,20 +80,17 @@ class EpsilonSolver:
                                                   self.problem_params.existing_edges,
                                                   solutions[i]["x"],
                                                   solutions[i]["u"]))
-        objectives0.pop(0)
 
         objectives1 = []
         for i in range(4):
             objectives1.append(compute_objective1(self.problem_params.G,
                                                   self.problem_params.existing_edges,
                                                   solutions[i]["x"]))
-        objectives1.pop(1)
 
         objectives2 = []
         for i in range(4):
             objectives2.append(compute_objective2(self.problem_params.sigma,
                                                   solutions[i]["u"]))
-        objectives2.pop(2)
 
         objectives3 = []
         for i in range(4):
@@ -100,12 +98,11 @@ class EpsilonSolver:
                                                   self.problem_params.num_vehicles,
                                                   self.problem_params.num_periods,
                                                   solutions[i]["WT"]))
-        objectives3.pop(3)
 
         # save computed objectives
         self.objectives = [objectives0, objectives1, objectives2, objectives3]
 
-    def compute_epsilon(self, num_epsilon: int) -> None:
+    def compute_epsilon(self, num_epsilon: int = 4) -> None:
         """
         Compute epsilon values for all objectives.
         """
@@ -116,14 +113,31 @@ class EpsilonSolver:
         if self.objectives is None:
             raise ValueError("Objectives must be computed first. Please run 'solve_single_objectives' method first.")
 
-        # compute epsilon values
         epsilons = []
         for i in range(1, 4):
-            ordered_objectives = np.unique(self.objectives[i])
-            epsilon_inf = ordered_objectives[0]
-            epsilon_sup = ordered_objectives[-1]
-            if i == 2:
-                epsilon_inf, epsilon_sup = epsilon_sup, epsilon_inf
+            # remove the objective corresponding to the model
+            objectives_copy = copy.deepcopy(self.objectives[i])
+            objectives_copy.pop(i)
+
+            # sort objectives
+            ordered_objectives = np.unique(objectives_copy)
+
+            # select bounds for epsilon values
+            epsilon_inf = None
+            epsilon_sup = None
+
+            if len(ordered_objectives) == 1:
+                epsilon_inf = ordered_objectives[0]
+                epsilon_sup = ordered_objectives[0]
+            else:
+                if i == 2:
+                    epsilon_inf = ordered_objectives[-2]
+                    epsilon_sup = ordered_objectives[-1]
+                else:
+                    epsilon_inf = ordered_objectives[0]
+                    epsilon_sup = ordered_objectives[1]
+
+            # compute epsilon values
             epsilons.append(np.unique(np.linspace(epsilon_inf, epsilon_sup, num=num_epsilon)))
 
         # combine epsilon values

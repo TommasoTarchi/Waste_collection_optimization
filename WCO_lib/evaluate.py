@@ -118,12 +118,11 @@ def compute_objective3(T_max: float,
     return num_vehicles * num_periods - float(np.sum(WT)) / T_max
 
 
-def compute_normalized_MID(params: ProblemParams,
+def compute_MID(params: ProblemParams,
                            solutions: Optional[Dict] = None,
                            objectives: Optional[List] = None) -> float:
     """
     Function to compute mean of ideal distance (MID) of a set of solutions.
-    MID is normalized by both maximum objective values and number of solutions.
 
     The metric can be computed starting from either the solution or the pre-computed
     objectives.
@@ -145,28 +144,11 @@ def compute_normalized_MID(params: ProblemParams,
 
     # if objectives provided
     if objectives is not None:
-        objectives_array = np.array(objectives)
-
-        # compute maximum values for rescaling
-        max_obj = np.max(objectives_array, axis=0)
-        for i in range(4):
-            if max_obj[i] == 0:
-                max_obj[i] = 1
-
-        # add objectives to MID
         for obj in objectives:
-            MID += sqrt((obj[0] / max_obj[0]) ** 2 +
-                        (obj[1] / max_obj[1]) ** 2 +
-                        (obj[2] / max_obj[2]) ** 2 +
-                        (obj[3] / max_obj[3]) ** 2)
+            MID += sqrt(np.sum(obj ** 2))
 
     # if solutions provided
     elif solutions is not None:
-        obj0 = []
-        obj1 = []
-        obj2 = []
-        obj3 = []
-
         for solution in solutions:
             # get solution values
             x = solution["x"]
@@ -174,32 +156,22 @@ def compute_normalized_MID(params: ProblemParams,
             WT = solution["WT"]
 
             # compute objectives
-            obj0.append(compute_objective0(params.theta,
-                                           params.c,
-                                           params.cv,
-                                           params.existing_edges,
-                                           x,
-                                           u))
-            obj1.append(compute_objective1(params.G, params.existing_edges, x))
-            obj2.append(params.sigma * params.num_vehicles * params.num_periods
-                        - compute_objective2(params.sigma, u))
-            obj3.append(compute_objective3(params.T_max,
-                                           params.num_vehicles,
-                                           params.num_periods,
-                                           WT))
+            obj0 = compute_objective0(params.theta,
+                                      params.c,
+                                      params.cv,
+                                      params.existing_edges,
+                                      x,
+                                      u)
+            obj1 = compute_objective1(params.G, params.existing_edges, x)
+            obj2 = (params.sigma * params.num_vehicles * params.num_periods
+                    - compute_objective2(params.sigma, u))
+            obj3 = compute_objective3(params.T_max,
+                                      params.num_vehicles,
+                                      params.num_periods,
+                                      WT)
 
-        # compute maximum values for rescaling
-        max_obj = [max(obj0), max(obj1), max(obj2), max(obj3)]
-        for i in range(4):
-            if max_obj[i] == 0:
-                max_obj[i] = 1
-
-        # add objectives to MID
-        for i in range(NOS):
-            MID += sqrt((obj0[i] / max_obj[0]) ** 2 +
-                        (obj1[i] / max_obj[1]) ** 2 +
-                        (obj2[i] / max_obj[2]) ** 2 +
-                        (obj3[i] / max_obj[3]) ** 2)
+            # compute MID
+            MID += sqrt(obj0 ** 2 + obj1 ** 2 + obj2 ** 2 + obj3 ** 2)
 
     return MID / NOS
 
@@ -260,12 +232,6 @@ def compute_RASO(params: ProblemParams,
     # compute terms
     for obj in objectives_list:
         min_obj = min(obj)
-
-        # correct for division by zero
-        #for i in range(len(obj)):
-        #    if obj[i] == 0:
-        #        obj[i] = 1e-6
-
         RASO += sum(obj) / min_obj - 4
 
     return RASO / NOS

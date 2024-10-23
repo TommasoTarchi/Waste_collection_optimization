@@ -1,0 +1,87 @@
+PROBLEM PARAMETERS:
+Number of nodes: 6
+Number of edges: 9
+Number of required edges: 5
+Number of periods: 1
+Number of vehicles: 2
+W: 5.25
+T_max: 24.299999999999997
+M: 10000
+theta: 0.1111111111111111
+sigma: 10
+ul: 0.2591999999999998
+uu: 0.1727999999999999
+
+NUMBER OF ITERATIONS FOR STATISTICS: 5
+
+PROFILING:
+Time for initial solutions generation: 0.019389393999972526 seconds
+Time for MOSA: 1.4418253100002403 seconds
+Time for MOIWOA: 85.08745694300023 seconds
+Total time for resolution: 86.54867164700045 seconds
+
+EDGES LIST: [(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0), (1, 3), (3, 1), (2, 3), (3, 2), (2, 4), (4, 2), (3, 4), (4, 3), (3, 5), (5, 3), (4, 5), (5, 4)]
+REQUIRED EDGES LIST: [[(0, 1), (1, 0), (1, 3), (3, 1), (2, 3), (3, 2), (2, 4), (4, 2), (3, 5), (5, 3)]]
+
+EVALUATION METRICS:
+Number of Pareto solutions: 14
+MID for pareto solutions: 28.307437865682054
+Distance for pareto solutions: 10.114178317509973
+
+PARETO SOLUTIONS:
+Solution 0:
+	Period 0:
+	Visited edges:[4, 0, 3, 2, 1]
+	Vehicles employed:[1, 1, 0, 0, 0]
+Solution 1:
+	Period 0:
+	Visited edges:[4, 0, 3, 2, 1]
+	Vehicles employed:[1, 0, 0, 0, 1]
+Solution 2:
+	Period 0:
+	Visited edges:[1, 3, 4, 0, 2]
+	Vehicles employed:[1, 0, 0, 1, 0]
+Solution 3:
+	Period 0:
+	Visited edges:[0, 4, 1, 2, 3]
+	Vehicles employed:[1, 1, 0, 0, 1]
+Solution 4:
+	Period 0:
+	Visited edges:[4, 1, 2, 3, 0]
+	Vehicles employed:[0, 1, 1, 1, 0]
+Solution 5:
+	Period 0:
+	Visited edges:[1, 4, 0, 3, 2]
+	Vehicles employed:[1, 0, 1, 0, 0]
+Solution 6:
+	Period 0:
+	Visited edges:[1, 0, 2, 4, 3]
+	Vehicles employed:[1, 0, 0, 1, 0]
+Solution 7:
+	Period 0:
+	Visited edges:[4, 3, 2, 1, 0]
+	Vehicles employed:[0, 0, 1, 0, 0]
+Solution 8:
+	Period 0:
+	Visited edges:[0, 3, 4, 1, 2]
+	Vehicles employed:[1, 0, 0, 1, 0]
+Solution 9:
+	Period 0:
+	Visited edges:[1, 2, 4, 3, 0]
+	Vehicles employed:[1, 0, 1, 0, 0]
+Solution 10:
+	Period 0:
+	Visited edges:[0, 2, 1, 3, 4]
+	Vehicles employed:[1, 0, 1, 0, 0]
+Solution 11:
+	Period 0:
+	Visited edges:[1, 2, 0, 3, 4]
+	Vehicles employed:[1, 0, 1, 0, 0]
+Solution 12:
+	Period 0:
+	Visited edges:[4, 3, 2, 0, 1]
+	Vehicles employed:[1, 0, 0, 1, 0]
+Solution 13:
+	Period 0:
+	Visited edges:[2, 3, 1, 0, 4]
+	Vehicles employed:[1, 0, 0, 1, 0]

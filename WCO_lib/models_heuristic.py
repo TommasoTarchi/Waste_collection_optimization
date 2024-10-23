@@ -439,10 +439,17 @@ def generate_heuristic_solution(problem_params: ProblemParams) -> list:
     solution_heuristic = []
 
     # generate solutions for each period with heuristic
+    # (run heuristic until success)
     for period in range(problem_params.num_periods):
-        period_solution = SinglePeriodVectorSolution(period)
-        period_solution.init_heuristic(problem_params)
-        solution_heuristic.append(period_solution)
+        init_success = False
+        while not init_success:
+            try:
+                period_solution = SinglePeriodVectorSolution(period)
+                period_solution.init_heuristic(problem_params)
+                solution_heuristic.append(period_solution)
+                init_success = True
+            except Exception:
+                print(f"Heuristic failed for period {period}. Retrying...")
 
     return solution_heuristic
 

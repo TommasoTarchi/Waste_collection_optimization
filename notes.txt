@@ -2,27 +2,18 @@
   favorire soluzioni non dominanti, il troncamento delle soluzioni in base all dominanza
   corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
   ecceda in numero massimo.
-- Eventualmente aggiungere altri stopping criteria e scriverli in Implementation_details.pdf.
 - Citare i paper da cui si sono presi la geometric cooling strategy (quello salvato in docs/),
   l'acceptance probability (sempre quello) e gli eventuali stopping criteria.
 - Far notare che per MOSA-MOIWOA si sono usati i parametri consigliati nel paper (ottenuti con
   taguchi method).
 - Aggiungere README.
-- Far notare che i valori di epsilon si sono calcolati prendendo l'intervallo tra il best e il worst
-  objective ma solo il sottointervallo tra 0.25 e 0.75. Far notare anche che l'oggetto calcolato con
-  i risultati del modello stesso che lo ottimizzava è stato escluso.
-- Far notare che le formule per MID e RASO del paper sono dovute essere corrette perché uno degli
-  objective è massimizzato. Far notare che si è anche normalizzato MID.
-- Far notare che nel metodo approssimato alla fine i veicoli tornano al deposito mentre in quello
-  esatto finiscono al disposal site (in realtà per ora finiscono tutti al disposal site, ma si
-  potrebbe cambiare).
 - Far notare che MOSA produce soluzioni non necessariamente con degli objectives migliori, ma
   sicuramente più vari (serve infatti ad 'esplorare' lo spazio delle soluzioni).
 - Far notare che il tempo di MOSA-MOIWOA varia molto a seconda dei run (dipende molto dall'inizializzazione
   delle soluzioni con l'euristica, che è randomica).
 - Eventualmente fare un po' di statistica sui risultati di MOSA-MOIWOA (anche sul tempo!), perché è randomico.
-- Valutare se eliminare alla fine di MOSA-MOIWOA le soluzioni con oggetti negativi (o magari capire perché
-  vengono così).
+  Far notare infatti che MOSA-MOIWOA è meno "affidabile" di epsiilon-constraint, perché è randomico (ad ogni
+  modo, data la ridotta complessità dell'algoritmo, si può runnare più volte e prendere la migliore soluzione).
 - Far notare che MOSA-MOIWOA solitamente raggiunge subito (già nelle prime 10 iterazioni) il numero massimo
   di seed, il che è considerato (anche nel paper) un buon segno.
 - Scrivere descrizioni commentate all'inizio degli script per l'esame.
@@ -31,6 +22,7 @@
   da chiamare) e anche come leggere le soluzioni ottenute. Far notare che gli oggetti calcolati usando le
   funzioni in evaluate sono come nel paper, mentre in quelli calcolati da dentro MOSA-MOIWOA il terzo oggetto
   è modificato per minimizzazione.
-
-- Controllare tutte le funzioni per il calcolo delle metriche se siano corrette e anche se le metriche usate
-  abbiano senso.
+- Far notare (rispetto al tempo di esecuzione) che comunque gurobi è molto ottimizzato, quindi per esempio
+  lavora in parallelo sulle cpu.
+- Capire bene perché la formula del quarto oggetto è fatta così.
+- Scegliere num_epsilon (aggiornare valore scelto nella tabella dei parametri nella presentazione).

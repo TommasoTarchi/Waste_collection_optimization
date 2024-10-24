@@ -1,3 +1,11 @@
+#
+# Run scalability study for epsilon-constraint algorithm.
+#
+# The number of epsilon values to be used can be set by the user.
+# Also a time limit (in seconds) is set to avoid "endless" computations.
+#
+
+
 import argparse
 import numpy as np
 import sys
@@ -20,12 +28,15 @@ if __name__ == "__main__":
     # get number of epsilon values
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_epsilon", type=int, default=5)
+    parser.add_argument("--time_limit", type=float, default=600.)
 
     args = parser.parse_args()
 
     num_epsilon = args.num_epsilon
+    time_limit = args.time_limit
 
     print(f"Using epsilon-solver with number of epsilon values = {num_epsilon}.")
+    print(f"Time limit for computation is set to {time_limit} seconds.")
 
     # set data directories
     data_dir = "../datasets/scalability"
@@ -71,8 +82,13 @@ if __name__ == "__main__":
 
         # solve multi-objective problem
         t4 = time.perf_counter()
-        solver.solve_multi_objective()
+        time_limit_exceeded = solver.solve_multi_objective(time_limit=600)
         t5 = time.perf_counter()
+
+        # check if time limit was exceeded
+        if time_limit_exceeded:
+            print(f"Time limit exceeded for problem {problem_id}. Exiting.")
+            break
 
         pareto_solutions = solver.return_pareto_solutions()
 
@@ -113,8 +129,8 @@ if __name__ == "__main__":
 
             f.write("\nEVALUATION METRICS:\n")
             f.write("Number of Pareto solutions: " + str(NOS) + "\n")
-            f.write("MID for pareto solutions: " + str(MID) + "\n")
-            f.write("Distance for pareto solutions: " + str(distance) + "\n\n")
+            f.write("MID for Pareto solutions: " + str(MID) + "\n")
+            f.write("Distance for Pareto solutions: " + str(distance) + "\n\n")
 
             f.write("\nEDGES LIST: " + str(params.existing_edges) + "\n")
             f.write("REQUIRED EDGES LIST: " + str(params.required_edges) + "\n")
@@ -158,7 +174,7 @@ if __name__ == "__main__":
     time_totals = [row[4] for row in rows]
 
     plt.plot(problem_ids, time_totals, marker='o', linestyle='-', color='b')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('Total Time to solution (s)')
     plt.title('Total solution time')
     plt.grid(True)
@@ -174,7 +190,7 @@ if __name__ == "__main__":
     distance_values = [row[3] for row in rows]
 
     plt.plot(problem_ids, NOS_values, marker='o', linestyle='-', color='b', label='Number of Pareto solutions')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('Number of Pareto solutions')
     plt.title('Number of Pareto solutions')
 
@@ -182,7 +198,7 @@ if __name__ == "__main__":
     plt.close()
 
     plt.plot(problem_ids, MID_values, marker='o', linestyle='-', color='b', label='MID')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('MID')
     plt.title('MID')
 
@@ -190,7 +206,7 @@ if __name__ == "__main__":
     plt.close()
 
     plt.plot(problem_ids, distance_values, marker='o', linestyle='-', color='b', label='Distance')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('Distance')
     plt.title('Distance')
 

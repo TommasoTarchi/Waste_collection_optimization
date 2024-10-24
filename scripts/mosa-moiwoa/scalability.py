@@ -1,3 +1,11 @@
+#
+# Run scalability study for MOSA-MOIWOA.
+#
+# The parameters to be used can be set by the user through a JSON.
+# Statistics is done over a number of runs for each problem.
+#
+
+
 import argparse
 import sys
 import os
@@ -93,7 +101,7 @@ if __name__ == "__main__":
             solver.apply_MOIWOA()
             t5 = time.perf_counter()
 
-            pareto_solutions = solver.return_solutions(stage="final")
+            pareto_solutions = solver.return_pareto_solutions(stage="final")
             objective_values = solver.return_objectives(stage="final")
 
             # compute metrics
@@ -138,8 +146,8 @@ if __name__ == "__main__":
 
                 f.write("\nEVALUATION METRICS:\n")
                 f.write("Number of Pareto solutions: " + str(len(pareto_solutions)) + "\n")
-                f.write("MID for pareto solutions: " + str(compute_MID(problem_params, objectives=objective_values)) + "\n")
-                f.write("Distance for pareto solutions: " + str(compute_distance(problem_params, objectives=objective_values)) + "\n")
+                f.write("MID for Pareto solutions: " + str(compute_MID(problem_params, objectives=objective_values)) + "\n")
+                f.write("Distance for Pareto solutions: " + str(compute_distance(problem_params, objectives=objective_values)) + "\n")
 
                 f.write("\nPARETO SOLUTIONS:\n")
                 solution_count = 0
@@ -178,7 +186,7 @@ if __name__ == "__main__":
                  for i in range(0, len(time_totals), runs_per_problem)]
 
     plt.plot(problem_ids_unique, time_avgs, marker='o', linestyle='-', color='b')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('Total Time to solution (s)')
     plt.title('Total solution time')
     plt.grid(True)
@@ -202,7 +210,7 @@ if __name__ == "__main__":
                      for i in range(0, len(distance_values), runs_per_problem)]
 
     plt.plot(problem_ids_unique, NOS_avgs, marker='o', linestyle='-', color='b', label='Number of Pareto solutions')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('Number of Pareto solutions')
     plt.title("Average number of Pareto solutions over" + str(runs_per_problem) + " runs")
 
@@ -210,7 +218,7 @@ if __name__ == "__main__":
     plt.close()
 
     plt.plot(problem_ids_unique, MID_avgs, marker='o', linestyle='-', color='b', label='MID')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('MID')
     plt.title("Average MID over" + str(runs_per_problem) + " runs")
 
@@ -218,7 +226,7 @@ if __name__ == "__main__":
     plt.close()
 
     plt.plot(problem_ids_unique, distance_avgs, marker='o', linestyle='-', color='b', label='Distance')
-    plt.xlabel('Size')
+    plt.xlabel('Problem ID')
     plt.ylabel('Distance')
     plt.title("Average distance over" + str(runs_per_problem) + " runs")
 

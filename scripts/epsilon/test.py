@@ -1,3 +1,10 @@
+#
+# Run epsilon-constraint algorithm on a test problem.
+#
+# The number of epsilon values to be used can be set by the user.
+#
+
+
 import sys
 import os
 import numpy as np
@@ -99,8 +106,8 @@ if __name__ == "__main__":
 
         f.write("\nEVALUATION METRICS:\n")
         f.write("Number of Pareto solutions: " + str(len(pareto_solutions)) + "\n")
-        f.write("MID for pareto solutions: " + str(compute_MID(params, solutions=pareto_solutions)) + "\n")
-        f.write("Distance for pareto solutions: " + str(compute_distance(params, solutions=pareto_solutions)) + "\n")
+        f.write("MID for Pareto solutions: " + str(compute_MID(params, solutions=pareto_solutions)) + "\n")
+        f.write("Distance for Pareto solutions: " + str(compute_distance(params, solutions=pareto_solutions)) + "\n")
 
         f.write("\nPARETO SOLUTIONS SUMMARY:\n")
         solution_count = 0

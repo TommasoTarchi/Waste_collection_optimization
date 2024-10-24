@@ -1,8 +1,9 @@
 import numpy as np
 import gurobipy as gb
 from itertools import product
-from typing import List
+from typing import Optional, List
 import copy
+import time
 
 from .params import ProblemParams
 from .models_exact import (SingleObjectModel0,
@@ -143,10 +144,12 @@ class EpsilonSolver:
         # combine epsilon values
         self.epsilon_values = list(product(*epsilons))
 
-    def solve_multi_objective(self) -> None:
+    def solve_multi_objective(self, time_limit: Optional[float] = None) -> bool:
         """
         Solve main problem with objective 0 as main objective and others as
         epsilon-constraints.
+
+        A time limit (in seconds) can be passed.
         """
         if self.objectives is None:
             raise ValueError("Objectives must be computed first. Please run 'solve_single_objectives' method first.")
@@ -154,7 +157,10 @@ class EpsilonSolver:
         if self.epsilon_values is None:
             raise ValueError("Epsilon values must be computed first. Please run 'compute_epsilon' method first.")
 
+        time_limit_exceeded = False
+
         # solve main model for all combinations of epsilon values
+        start_time = time.perf_counter()
         pareto_solutions = []
         model_status = []
         for epsilons in self.epsilon_values:
@@ -168,6 +174,12 @@ class EpsilonSolver:
                 pareto_solutions.append(model.return_best_solution())
                 model_status.append(model.return_status())
             #model.return_slack()  # FOR DEBUGGING
+
+            # check time limit
+            elapsed_time = time.perf_counter() - start_time
+            if time_limit is not None and elapsed_time > time_limit:
+                time_limit_exceeded = True
+                break
 
         # remove duplicate solutions
         pareto_solutions_unique = []
@@ -217,6 +229,8 @@ class EpsilonSolver:
 
         # save status of the model
         self.model_status = model_status
+
+        return time_limit_exceeded
 
     def return_pareto_solutions(self) -> List:
         """

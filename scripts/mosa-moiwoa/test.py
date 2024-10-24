@@ -1,3 +1,10 @@
+#
+# Run MOSA-MOIWOA on a test problem.
+#
+# The parameters to be used can be set by the user through a JSON.
+#
+
+
 import sys
 import os
 import argparse
@@ -69,7 +76,7 @@ if __name__ == "__main__":
     solver.apply_MOIWOA()
     t5 = time.perf_counter()
 
-    pareto_solutions = solver.return_solutions(stage="final")
+    pareto_solutions = solver.return_pareto_solutions(stage="final")
     objective_values = solver.return_objectives(stage="final")
 
     print("MOIWOA run successfully.")
@@ -106,9 +113,9 @@ if __name__ == "__main__":
 
         f.write("\nEVALUATION METRICS:\n")
         f.write("Number of Pareto solutions: " + str(len(pareto_solutions)) + "\n")
-        f.write("MID for pareto solutions: " + str(compute_MID(problem_params,
+        f.write("MID for Pareto solutions: " + str(compute_MID(problem_params,
                                                                                      objectives=objective_values)) + "\n")
-        f.write("Distance for pareto solutions: " + str(compute_distance(problem_params, objectives=objective_values)) + "\n")
+        f.write("Distance for Pareto solutions: " + str(compute_distance(problem_params, objectives=objective_values)) + "\n")
 
         f.write("\nPARETO SOLUTIONS:\n")
         solution_count = 0

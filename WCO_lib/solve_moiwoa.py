@@ -212,7 +212,7 @@ class MosaMoiwoaSolver:
                                       self.solver_params.MOIWOA_N_max,
                                       self.solver_params.MOIWOA_max_iter)
 
-    def return_solutions(self, stage: str = "final") -> list:
+    def return_pareto_solutions(self, stage: str = "final") -> list:
         """
         Return requested solutions as list of dictionaries, with the following structure:
         list containing one list for each solution found, each one containing one dictionary

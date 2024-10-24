@@ -55,7 +55,10 @@ if __name__ == "__main__":
     print("Epsilon values for epsilon-solver computed.\n")
 
     # solve multi-objective problem
-    solver.solve_multi_objective()
+    time_exceeded = solver.solve_multi_objective(time_limit=100)
+
+    if time_exceeded:
+        print(\n"Time limit exceeded.\n")
 
     pareto_solutions = solver.return_pareto_solutions()
 

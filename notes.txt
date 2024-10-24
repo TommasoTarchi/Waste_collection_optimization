@@ -2,21 +2,15 @@
   favorire soluzioni non dominanti, il troncamento delle soluzioni in base all dominanza
   corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
   ecceda in numero massimo.
-- Citare i paper da cui si sono presi la geometric cooling strategy (quello salvato in docs/),
-  l'acceptance probability (sempre quello) e gli eventuali stopping criteria.
-- Far notare che per MOSA-MOIWOA si sono usati i parametri consigliati nel paper (ottenuti con
-  taguchi method).
 - Aggiungere README.
 - Far notare che MOSA produce soluzioni non necessariamente con degli objectives migliori, ma
   sicuramente più vari (serve infatti ad 'esplorare' lo spazio delle soluzioni).
 - Far notare che il tempo di MOSA-MOIWOA varia molto a seconda dei run (dipende molto dall'inizializzazione
   delle soluzioni con l'euristica, che è randomica).
-- Eventualmente fare un po' di statistica sui risultati di MOSA-MOIWOA (anche sul tempo!), perché è randomico.
-  Far notare infatti che MOSA-MOIWOA è meno "affidabile" di epsiilon-constraint, perché è randomico (ad ogni
-  modo, data la ridotta complessità dell'algoritmo, si può runnare più volte e prendere la migliore soluzione).
+- Far notare che MOSA-MOIWOA è meno "affidabile" di epsiilon-constraint, perché è randomico (ad ogni modo
+  data la ridotta complessità dell'algoritmo, si può runnare più volte e prendere la migliore soluzione).
 - Far notare che MOSA-MOIWOA solitamente raggiunge subito (già nelle prime 10 iterazioni) il numero massimo
   di seed, il che è considerato (anche nel paper) un buon segno.
-- Scrivere descrizioni commentate all'inizio degli script per l'esame.
 - Togliere .gitkeep dalle directory in cui non serve.
 - Nel README aggiungere le istruzioni per risolvere un problema con i due modelli (step by step tutti metodi
   da chiamare) e anche come leggere le soluzioni ottenute. Far notare che gli oggetti calcolati usando le
@@ -25,4 +19,4 @@
 - Far notare (rispetto al tempo di esecuzione) che comunque gurobi è molto ottimizzato, quindi per esempio
   lavora in parallelo sulle cpu.
 - Capire bene perché la formula del quarto oggetto è fatta così.
-- Scegliere num_epsilon (aggiornare valore scelto nella tabella dei parametri nella presentazione).
+- Capire se si può pubblicare la repository (eventualmente scegliere licenza con molta cura).

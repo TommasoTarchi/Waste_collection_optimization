@@ -49,21 +49,21 @@ if __name__ == "__main__":
     print("Problem set.\n")
 
     solver.generate_initial_solutions()
-    initial_solutions = solver.return_solutions(stage="initial")
+    initial_solutions = solver.return_pareto_solutions(stage="initial")
 
     print("Initial solutions generated:")
     print(initial_solutions)
     print("\n")
 
     solver.apply_MOSA()
-    MOSA_solutions = solver.return_solutions(stage="MOSA")
+    MOSA_solutions = solver.return_pareto_solutions(stage="MOSA")
 
     print("MOSA applied, with solutions:")
     print(MOSA_solutions)
     print("\n")
 
     solver.apply_MOIWOA()
-    final_solutions = solver.return_solutions(stage="final")
+    final_solutions = solver.return_pareto_solutions(stage="final")
 
     print("Problem solved with MOIWOA, with final solutions:")
     print(final_solutions)

@@ -16,7 +16,7 @@ Additionally, a comparative study on the two algorithms is provided in [this pre
 
 - [What you will find in this repository](#what-you-will-find-in-this-repository)
 - [Requirements](#requirements)
-- [How to generate a valid dataset](#how-to-generate-a-valid-dataset)
+- [How to prepare a valid dataset](#how-to-prepare-a-valid-dataset)
 - [How to use the models](#how-to-use-the-models)
 - [References](#references)
 
@@ -66,123 +66,123 @@ following parameters:
 ```
 
 
-## How to generate a valid dataset
+## How to prepare a valid dataset
 
 
 ## How to use the models
 
 1. Clone the repository on your machine:
-```bash
-$ git clone git@github.com:TommasoTarchi/Waste_collection_optimization.git
-```
+   ```bash
+   $ git clone git@github.com:TommasoTarchi/Waste_collection_optimization.git
+   ```
 
 2. Place the following lines of code at the beginning of each script using the library:
-```python
-import sys
+   ```python
+   import sys
 
-library_path = </path/to/WCO_lib>
-if library_path not in sys.path:
-    sys.path.append(library_path)
-```
+   library_path = </path/to/WCO_lib>
+   if library_path not in sys.path:
+       sys.path.append(library_path)
+   ```
 
 3. Before running any model make sure you satisfy all requirements listed in [this section](#requirements) and have
-a valid dataset (please take a look a the [previous section](#how-to-generate-a-dataset) to correctly generate/prepare
-your dataset).
+   a valid dataset (please take a look at the [previous section](#how-to-prepare-a-valid-dataset) to correctly generate/prepare
+   your dataset).
 
-4. Depending on the model you want to run, import the needed classes and functions:
+5. Depending on the model you want to run, import the needed classes and functions:
    - For epsilon-constraint method, here is the minimal import:
-    ```python
-    from WCO_lib.params import ProblemParams
-    from WCO_lib.solve_epsilon import EpsilonSolver
-    ```
+     ```python
+     from WCO_lib.params import ProblemParams
+     from WCO_lib.solve_epsilon import EpsilonSolver
+     ```
    - For MOSA-MOIWOA, here is the minimal import:
-    ```python
-    from WCO_lib.params import ProblemParams, MosaMoiwoaSolverParams
-    from WCO_lib.solve_moiwoa import MosaMoiwoaSolver
-    ```
+     ```python
+     from WCO_lib.params import ProblemParams, MosaMoiwoaSolverParams
+     from WCO_lib.solve_moiwoa import MosaMoiwoaSolver
+     ```
 
-5. Create a `ProblemParams` object, specifying the path to the dataset:
-```python
-problem_params = ProblemParams()
-problem_params.load_from_dir(</path/to/data/directory/>)
-```
+6. Create a `ProblemParams` object, specifying the path to the dataset:
+   ```python
+   problem_params = ProblemParams()
+   problem_params.load_from_dir(</path/to/data/directory/>)
+   ```
 
-6. Depending on which algorithm you want to use, follow the instructions contained in the following sections.
+7. Depending on which algorithm you want to use, follow the instructions contained in the following sections.
 
 ### Epsilon-constraint method
 
 7. Create an `EpsilonSolver` object passing the problem parameters:
-```python
-solver = EpsilonSolver(problem_params)
-```
+   ```python
+   solver = EpsilonSolver(problem_params)
+   ```
 
 8. Solve the single objective sub-problems:
-```python
-solver.solve_single_objectives()
-```
+   ```python
+   solver.solve_single_objectives()
+   ```
 
 9. Choose the number of epsilons you want to use <num_epsilon>, then compute the epsilon values and solve the
-multi-objective problem:
-```python
-solver.compute_epsilon(<num_epsilon>)
-solver.solve_multi_objective()
-```
+   multi-objective problem:
+   ```python
+   solver.compute_epsilon(<num_epsilon>)
+   solver.solve_multi_objective()
+   ```
 
 10. Retrieve the Pareto solutions:
-```python
-pareto_solutions = solver.return_pareto_solutions()
-```
-The returned object is a list of dictionaries, each one representeing a Pareto solution.
-The keys of the dictionaries correspond to the paper's variable names (`x`, `y`, `u`, `LT`, `UT`, `WT`).
+    ```python
+    pareto_solutions = solver.return_pareto_solutions()
+    ```
+    The returned object is a list of dictionaries, each one representeing a Pareto solution.
+    The keys of the dictionaries correspond to the paper's variable names (`x`, `y`, `u`, `LT`, `UT`, `WT`).
 
 ### MOSA-MOIWOA
 
 7. Build the graph corresponding to the dataset:
-```python
-problem_params.build_graph()
-```
+   ```python
+   problem_params.build_graph()
+   ```
 
 8. Create a `MosaMoiwoaSolverParams` object, specifying the path to parameters file:
-```python
-solver_params = MosaMoiwoaSolverParams()
-solver_params.load_from_file(</path/to/solver/parameters/file>)
-```
-**Notice**: if you are ok with default parameters, you can avoid creating the parameters file and skip the
-second line.
+   ```python
+   solver_params = MosaMoiwoaSolverParams()
+   solver_params.load_from_file(</path/to/solver/parameters/file>)
+   ```
+   **Notice**: if you are ok with default parameters, you can avoid creating the parameters file and skip the
+   second line.
 
-9. Create a `MosaMoiwoaSolver` object passing the problem parameters and the solver parameters:
-```python
-solver = MosaMoiwoaSolver(problem_params, solver_params)
-```
+10. Create a `MosaMoiwoaSolver` object passing the problem parameters and the solver parameters:
+    ```python
+    solver = MosaMoiwoaSolver(problem_params, solver_params)
+    ```
 
 10. Generate initial solutions:
-```python
-solver.generate_initial_solutions()
-```
+    ```python
+    solver.generate_initial_solutions()
+    ```
 
 11. Refine initial solutions using MOSA:
-```python
-solver.apply_MOSA()
-```
+    ```python
+    solver.apply_MOSA()
+    ```
 
 12. Apply MOIWOA:
-```python
-solver.apply_MOIWOA()
-```
+    ```python
+    solver.apply_MOIWOA()
+    ```
 
 13. Retrieve the Pareto solutions:
-```python
-pareto_solutions = solver.return_pareto_solutions()
-```
-The returned object is a list of lists, each one representing a Pareto solution (see the
-[implementation details](./docs/Implementation_details.pdf) for more details).
+    ```python
+    pareto_solutions = solver.return_pareto_solutions()
+    ```
+    The returned object is a list of lists, each one representing a Pareto solution (see the
+    [implementation details](./docs/Implementation_details.pdf) for complete description).
 
 
 ## References
 
--Tirkolaee, E.B., Goli, A., Gütmen, S. et al. A novel model for sustainable waste collection arc routing problem:
-Pareto-based algorithms. Ann Oper Res 324, 189–214 (2023).
-[https://doi.org/10.1007/s10479-021-04486-2](https://doi.org/10.1007/s10479-021-04486-2).
+- Tirkolaee, E.B., Goli, A., Gütmen, S. et al. A novel model for sustainable waste collection arc routing problem:
+  Pareto-based algorithms. Ann Oper Res 324, 189–214 (2023).
+  [https://doi.org/10.1007/s10479-021-04486-2](https://doi.org/10.1007/s10479-021-04486-2).
 
 - Amine, Khalil, Multiobjective Simulated Annealing: Principles and Algorithm Variants, Advances in Operations
-Research, 2019, 8134674, 13 pages, 2019. [https://doi.org/10.1155/2019/8134674](https://doi.org/10.1155/2019/8134674).
+  Research, 2019, 8134674, 13 pages, 2019. [https://doi.org/10.1155/2019/8134674](https://doi.org/10.1155/2019/8134674).

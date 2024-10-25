@@ -68,6 +68,46 @@ following parameters:
 
 ## How to prepare a valid dataset
 
+A valid dataset directory should contain the following files (with this exact names):
+
+- `problem_parameters.json`: file containing problem size and scala parameters (see below for more info);
+- `c.npy`
+- `cv.npy`
+- `d.npy`
+- `G.npy`
+- `t.npy`
+
+`c`, `cv`, `d`, `G` and `t` refer to the parameters under the same name in the original paper, here saved in
+binary files.
+
+`problem_parameters.json` should contain the following parameters:
+```
+"num_nodes" -> int
+"num_edges" -> int
+"num_required_edges" -> int
+"num_periods" -> int
+"num_vehicles" -> int
+"W" -> float
+"T_max" -> float
+"M" -> int
+"theta" -> float
+"sigma" -> float
+"ul" -> float
+"uu" -> float
+```
+Refer to the original paper for names reference.
+
+If you don't have a dataset, you can generate a synthetic one by using the function `generate_dataset`, contained in the
+`dataset.py` module of the library.
+
+A method to compute "good parameters" is also available: given a problem size (i.e. a set of values for `num_nodes`,
+`num_edges`, `num_required_edges`, `num_periods` and `num_vehicles`), good values for other parameters in the JSON can be computed
+using either the function `compute_good_parameters` or `compute_good_parameters_random` (the first one is suggested), contained in
+the `dataset.py` module of the library.
+By "good parameters", we mean parameters that allow you to generate (using the functions of the `dataset.py` module) datasets that
+have a feasible but not trivial solution (if you are interested in the way this parameters are computed, see the
+[presentation](./docs/Presentation.pdf)).
+
 
 ## How to use the models
 

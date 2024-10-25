@@ -205,7 +205,7 @@ have a feasible but not trivial solution (if you are interested in the way this 
     solver.apply_MOSA()
     ```
 
-12. Apply MOIWOA:
+12. Run MOIWOA:
     ```python
     solver.apply_MOIWOA()
     ```

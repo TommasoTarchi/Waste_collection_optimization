@@ -2,21 +2,13 @@
   favorire soluzioni non dominanti, il troncamento delle soluzioni in base all dominanza
   corregge (si spera) questo problema. Questo, chiaramente, ammesso che il numero di soluzioni
   ecceda in numero massimo.
-- Aggiungere README.
-- Far notare che MOSA produce soluzioni non necessariamente con degli objectives migliori, ma
-  sicuramente più vari (serve infatti ad 'esplorare' lo spazio delle soluzioni).
-- Far notare che il tempo di MOSA-MOIWOA varia molto a seconda dei run (dipende molto dall'inizializzazione
-  delle soluzioni con l'euristica, che è randomica).
-- Far notare che MOSA-MOIWOA è meno "affidabile" di epsiilon-constraint, perché è randomico (ad ogni modo
-  data la ridotta complessità dell'algoritmo, si può runnare più volte e prendere la migliore soluzione).
 - Far notare che MOSA-MOIWOA solitamente raggiunge subito (già nelle prime 10 iterazioni) il numero massimo
   di seed, il che è considerato (anche nel paper) un buon segno.
-- Togliere .gitkeep dalle directory in cui non serve.
-- Nel README aggiungere le istruzioni per risolvere un problema con i due modelli (step by step tutti metodi
-  da chiamare) e anche come leggere le soluzioni ottenute. Far notare che gli oggetti calcolati usando le
-  funzioni in evaluate sono come nel paper, mentre in quelli calcolati da dentro MOSA-MOIWOA il terzo oggetto
-  è modificato per minimizzazione.
 - Far notare (rispetto al tempo di esecuzione) che comunque gurobi è molto ottimizzato, quindi per esempio
   lavora in parallelo sulle cpu.
 - Capire bene perché la formula del quarto oggetto è fatta così.
+- Capire bene correzioni fatte a constraints.
 - Capire se si può pubblicare la repository (eventualmente scegliere licenza con molta cura).
+- Runnare MOSA-MOIWOA tipo 10 volte su dataset di problema 2 per vedere la differenza di tempo, comparare
+  anche con epsilon-constraint.
+- Ricontrollare che il sorting per crowding distance sia fatto nel senso giusto.

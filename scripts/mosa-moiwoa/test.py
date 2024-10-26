@@ -4,7 +4,6 @@
 # The parameters to be used can be set by the user through a JSON.
 #
 
-
 import sys
 import os
 import argparse
@@ -79,7 +78,7 @@ if __name__ == "__main__":
     pareto_solutions = solver.return_pareto_solutions(stage="final")
     objective_values = solver.return_objectives(stage="final")
 
-    print("MOIWOA run successfully.")
+    print("Done.")
 
     # compute profiling
     time_initial_heuristic = t1 - t0

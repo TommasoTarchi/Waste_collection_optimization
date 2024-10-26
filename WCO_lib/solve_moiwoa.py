@@ -129,8 +129,7 @@ def MOIWOA(initial_seeds: list,
         current_objectives_values += new_objectives_values
         current_fitness_values += new_fitness_values
 
-        # truncate seed population if larger than upper limit
-        if len(current_seeds) > N_max:
+        if len(current_seeds) > N_max and n_iter < max_iter - 1:
             # apply non-dominated sorting
             sorted_seeds_idx, _ = sort_solutions(current_objectives_values)
 

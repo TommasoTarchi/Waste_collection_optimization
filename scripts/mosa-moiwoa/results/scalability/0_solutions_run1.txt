@@ -15,25 +15,41 @@ uu: 0.11519999999999996
 NUMBER OF ITERATIONS FOR STATISTICS: 5
 
 PROFILING:
-Time for initial solutions generation: 0.017764086999704887 seconds
-Time for MOSA: 1.3210664059997725 seconds
-Time for MOIWOA: 230.4761920589999 seconds
-Total time for resolution: 231.8150225519994 seconds
+Time for initial solutions generation: 0.015844736999952147 seconds
+Time for MOSA: 1.19740566400003 seconds
+Time for MOIWOA: 240.47628489299996 seconds
+Total time for resolution: 241.68953529399994 seconds
 
 EDGES LIST: [(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0), (1, 2), (2, 1), (1, 3), (3, 1), (2, 3), (3, 2)]
 REQUIRED EDGES LIST: [[(0, 2), (2, 0), (0, 3), (3, 0), (1, 3), (3, 1)]]
 
 EVALUATION METRICS:
-Number of Pareto solutions: 2
-MID for Pareto solutions: 19.306238221670704
+Number of Pareto solutions: 6
+MID for Pareto solutions: 19.3062382216707
 Distance for Pareto solutions: 2.559323480548991
 
 PARETO SOLUTIONS:
 Solution 0:
 	Period 0:
-	Visited edges:[0, 2, 1]
-	Vehicles employed:[1, 1, 0]
+	Visited edges:[1, 0, 2]
+	Vehicles employed:[0, 1, 1]
 Solution 1:
+	Period 0:
+	Visited edges:[1, 0, 2]
+	Vehicles employed:[0, 1, 1]
+Solution 2:
+	Period 0:
+	Visited edges:[0, 2, 1]
+	Vehicles employed:[1, 0, 1]
+Solution 3:
+	Period 0:
+	Visited edges:[0, 2, 1]
+	Vehicles employed:[1, 0, 1]
+Solution 4:
+	Period 0:
+	Visited edges:[1, 0, 2]
+	Vehicles employed:[0, 1, 1]
+Solution 5:
 	Period 0:
 	Visited edges:[0, 2, 1]
 	Vehicles employed:[1, 0, 1]

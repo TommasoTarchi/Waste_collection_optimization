@@ -1,0 +1,175 @@
+PROBLEM PARAMETERS:
+Number of nodes: 6
+Number of edges: 9
+Number of required edges: 5
+Number of periods: 1
+Number of vehicles: 2
+W: 5.25
+T_max: 24.299999999999997
+M: 10000
+theta: 0.1111111111111111
+sigma: 10
+ul: 0.2591999999999998
+uu: 0.1727999999999999
+
+PROFILING:
+Time for single-objective problems resolution: 3.4757834460033337 seconds
+Time for epsilon values computation: 0.0005652800027746707 seconds
+Time for final model resolution: 171.86100290699687 seconds
+Total time for resolution: 175.33735163300298 seconds
+
+EDGES LIST: [(0, 1), (1, 0), (0, 3), (3, 0), (0, 4), (4, 0), (1, 2), (2, 1), (1, 4), (4, 1), (2, 3), (3, 2), (2, 4), (4, 2), (2, 5), (5, 2), (4, 5), (5, 4)]
+REQUIRED EDGES LIST: [[(0, 1), (1, 0), (0, 3), (3, 0), (0, 4), (4, 0), (1, 2), (2, 1), (2, 4), (4, 2)]]
+
+GUROBI STATUS OF THE SOLVED MODELS: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+
+EVALUATION METRICS:
+Number of Pareto solutions: 4
+MID for Pareto solutions: 21.653965303827466
+Distance for Pareto solutions: 10.462622763138437
+
+PARETO SOLUTIONS SUMMARY:
+Solution 0:
+	Number of employed vehicles in period 0: 2
+	Total number of traversings in period 0: 11
+	Total number of served edges in period 0: 5
+	Vehicle 0:
+		Trip 0:
+		x: [1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
+		y: [1 0 0 0 0 0 1 0 0 0]
+		Trip 1:
+		x: [0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1 1]
+		y: [0 0 0 0 1 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+	Vehicle 1:
+		Trip 0:
+		x: [0 0 1 0 0 0 0 0 0 0 0 1 1 0 0 0 1 0]
+		y: [0 0 1 0 0 0 0 0 1 0]
+		Trip 1:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+Solution 1:
+	Number of employed vehicles in period 0: 1
+	Total number of traversings in period 0: 12
+	Total number of served edges in period 0: 5
+	Vehicle 0:
+		Trip 0:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 1:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+	Vehicle 1:
+		Trip 0:
+		x: [1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
+		y: [1 0 0 0 0 0 1 0 0 0]
+		Trip 1:
+		x: [0 0 0 1 1 0 0 0 0 0 1 0 0 1 0 0 1 1]
+		y: [0 0 0 1 1 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 1]
+		y: [0 0 0 0 0 0 0 0 0 1]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+Solution 2:
+	Number of employed vehicles in period 0: 1
+	Total number of traversings in period 0: 12
+	Total number of served edges in period 0: 5
+	Vehicle 0:
+		Trip 0:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 1:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+	Vehicle 1:
+		Trip 0:
+		x: [1 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
+		y: [1 0 0 0 0 0 1 0 0 0]
+		Trip 1:
+		x: [0 0 0 1 1 0 0 0 0 0 1 0 0 1 0 0 1 1]
+		y: [0 0 0 1 1 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 1]
+		y: [0 0 0 0 0 0 0 0 0 1]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+Solution 3:
+	Number of employed vehicles in period 0: 2
+	Total number of traversings in period 0: 12
+	Total number of served edges in period 0: 5
+	Vehicle 0:
+		Trip 0:
+		x: [0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0]
+		y: [0 0 0 0 1 0 0 0 0 0]
+		Trip 1:
+		x: [0 1 0 0 1 0 0 1 0 0 0 0 0 1 0 0 1 1]
+		y: [0 1 0 0 0 0 0 1 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+	Vehicle 1:
+		Trip 0:
+		x: [0 0 1 0 0 0 0 0 0 0 0 1 1 0 0 0 1 0]
+		y: [0 0 1 0 0 0 0 0 1 0]
+		Trip 1:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 2:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 3:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]
+		Trip 4:
+		x: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+		y: [0 0 0 0 0 0 0 0 0 0]

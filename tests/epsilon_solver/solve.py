@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import time
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if library_path not in sys.path:
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     bounds_G = (1, 3)
 
     # set number of epsilon values for epsilon-solver
-    num_epsilon = 4
+    num_epsilon = 12
 
     # generate dataset
     generate_dataset(data_dir, bounds_c, bounds_d, bounds_t, bounds_cv, bounds_G)
@@ -55,10 +56,12 @@ if __name__ == "__main__":
     print("Epsilon values for epsilon-solver computed.\n")
 
     # solve multi-objective problem
+    time_start = time.perf_counter()
     time_exceeded = solver.solve_multi_objective(time_limit=100)
+    print("Time elapsed: " + str(time.perf_counter() - time_start) + " seconds.\n")
 
     if time_exceeded:
-        print(\n"Time limit exceeded.\n")
+        print("\nTime limit exceeded.\n")
 
     pareto_solutions = solver.return_pareto_solutions()
 

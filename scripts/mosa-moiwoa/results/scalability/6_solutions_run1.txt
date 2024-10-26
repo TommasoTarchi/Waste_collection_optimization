@@ -1,0 +1,318 @@
+PROBLEM PARAMETERS:
+Number of nodes: 10
+Number of edges: 13
+Number of required edges: 9
+Number of periods: 2
+Number of vehicles: 4
+W: 4.725
+T_max: 31.589999999999996
+M: 10000
+theta: 0.07692307692307693
+sigma: 10
+ul: 0.37440000000000007
+uu: 0.24960000000000004
+
+NUMBER OF ITERATIONS FOR STATISTICS: 5
+
+PROFILING:
+Time for initial solutions generation: 0.10127957799977594 seconds
+Time for MOSA: 8.767599746000087 seconds
+Time for MOIWOA: 25.11880128499979 seconds
+Total time for resolution: 33.98768060899965 seconds
+
+EDGES LIST: [(0, 1), (1, 0), (0, 4), (4, 0), (0, 5), (5, 0), (0, 9), (9, 0), (1, 2), (2, 1), (1, 5), (5, 1), (1, 7), (7, 1), (2, 3), (3, 2), (2, 5), (5, 2), (2, 7), (7, 2), (3, 6), (6, 3), (3, 8), (8, 3), (3, 9), (9, 3)]
+REQUIRED EDGES LIST: [[(0, 1), (1, 0), (0, 4), (4, 0), (0, 9), (9, 0), (1, 5), (5, 1), (1, 7), (7, 1), (2, 3), (3, 2), (2, 7), (7, 2), (3, 6), (6, 3), (3, 8), (8, 3)], [(0, 1), (1, 0), (0, 4), (4, 0), (0, 5), (5, 0), (1, 2), (2, 1), (1, 7), (7, 1), (2, 3), (3, 2), (2, 5), (5, 2), (3, 8), (8, 3), (3, 9), (9, 3)]]
+
+EVALUATION METRICS:
+Number of Pareto solutions: 41
+MID for Pareto solutions: 117.64887406175288
+Distance for Pareto solutions: 17.33869131515715
+
+PARETO SOLUTIONS:
+Solution 0:
+	Period 0:
+	Visited edges:[1, 4, 2, 5, 0, 7, 8, 3, 6]
+	Vehicles employed:[1, 0, 0, 0, 2, 2, 3, 3, 2]
+	Period 1:
+	Visited edges:[0, 4, 8, 2, 6, 7, 5, 3, 1]
+	Vehicles employed:[0, 0, 3, 2, 1, 2, 0, 1, 1]
+Solution 1:
+	Period 0:
+	Visited edges:[5, 4, 0, 3, 8, 7, 6, 1, 2]
+	Vehicles employed:[0, 3, 3, 2, 1, 0, 0, 1, 2]
+	Period 1:
+	Visited edges:[2, 8, 6, 5, 3, 7, 0, 1, 4]
+	Vehicles employed:[0, 2, 2, 1, 0, 3, 3, 2, 1]
+Solution 2:
+	Period 0:
+	Visited edges:[8, 2, 3, 1, 7, 5, 0, 4, 6]
+	Vehicles employed:[2, 3, 1, 1, 0, 3, 3, 1, 2]
+	Period 1:
+	Visited edges:[1, 3, 2, 7, 5, 8, 0, 6, 4]
+	Vehicles employed:[0, 0, 0, 1, 2, 1, 2, 2, 3]
+Solution 3:
+	Period 0:
+	Visited edges:[0, 6, 2, 3, 5, 8, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 0, 8, 4, 7, 1, 6, 3, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 4:
+	Period 0:
+	Visited edges:[3, 7, 2, 8, 6, 5, 0, 4, 1]
+	Vehicles employed:[2, 3, 1, 1, 0, 3, 3, 0, 0]
+	Period 1:
+	Visited edges:[1, 3, 0, 4, 6, 8, 7, 5, 2]
+	Vehicles employed:[1, 3, 3, 0, 3, 0, 2, 2, 1]
+Solution 5:
+	Period 0:
+	Visited edges:[5, 6, 0, 3, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 4, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 6:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 5, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 6, 7, 1, 4, 0, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 7:
+	Period 0:
+	Visited edges:[5, 0, 6, 3, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 3, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[7, 3, 8, 4, 0, 1, 6, 5, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 8:
+	Period 0:
+	Visited edges:[4, 3, 7, 0, 8, 5, 6, 1, 2]
+	Vehicles employed:[1, 3, 0, 0, 3, 0, 2, 1, 1]
+	Period 1:
+	Visited edges:[2, 4, 3, 0, 1, 5, 7, 8, 6]
+	Vehicles employed:[3, 0, 0, 0, 3, 2, 1, 2, 2]
+Solution 9:
+	Period 0:
+	Visited edges:[0, 6, 3, 5, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 1, 4, 0, 8, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 10:
+	Period 0:
+	Visited edges:[5, 2, 0, 3, 8, 6, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 6, 8, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 0, 0, 1]
+Solution 11:
+	Period 0:
+	Visited edges:[0, 6, 8, 4, 5, 2, 7, 1, 3]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 4, 6, 1, 7, 0, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 12:
+	Period 0:
+	Visited edges:[0, 6, 8, 1, 5, 2, 7, 3, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 8, 7, 1, 6, 0, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 13:
+	Period 0:
+	Visited edges:[0, 6, 3, 5, 2, 7, 1, 8, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 0, 1, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 4, 7, 1, 6, 0, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 14:
+	Period 0:
+	Visited edges:[5, 2, 0, 3, 8, 6, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 2, 4, 0, 1, 6, 7, 8]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 15:
+	Period 0:
+	Visited edges:[7, 0, 2, 1, 4, 5, 6, 8, 3]
+	Vehicles employed:[2, 3, 2, 0, 1, 1, 1, 3, 0]
+	Period 1:
+	Visited edges:[4, 8, 1, 7, 6, 0, 5, 3, 2]
+	Vehicles employed:[2, 1, 1, 0, 0, 3, 1, 2, 3]
+Solution 16:
+	Period 0:
+	Visited edges:[5, 0, 6, 3, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 3, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 6, 8, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 0, 0, 1]
+Solution 17:
+	Period 0:
+	Visited edges:[5, 6, 3, 8, 2, 0, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 1, 0, 1]
+	Period 1:
+	Visited edges:[2, 3, 8, 4, 0, 1, 6, 7, 5]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 18:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 5, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 6, 0, 1, 4, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 19:
+	Period 0:
+	Visited edges:[5, 6, 3, 8, 2, 0, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 8, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 3, 0, 1]
+Solution 20:
+	Period 0:
+	Visited edges:[5, 6, 0, 1, 8, 2, 7, 3, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 8, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 2, 3, 0, 1]
+Solution 21:
+	Period 0:
+	Visited edges:[5, 2, 0, 3, 8, 6, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 8, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 3, 0, 1]
+Solution 22:
+	Period 0:
+	Visited edges:[0, 6, 3, 5, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 4, 0, 2, 6, 7, 1]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 23:
+	Period 0:
+	Visited edges:[5, 6, 3, 8, 2, 7, 0, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 0, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 1, 4, 0, 8, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 24:
+	Period 0:
+	Visited edges:[4, 6, 5, 3, 8, 2, 7, 1, 0]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 8, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 3, 0, 1]
+Solution 25:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 2, 5, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 1, 0, 1]
+	Period 1:
+	Visited edges:[3, 5, 8, 4, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 1, 3, 2, 0, 2, 3, 0, 1]
+Solution 26:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 2, 7, 1, 5, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 0, 1, 1]
+	Period 1:
+	Visited edges:[5, 3, 8, 4, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 27:
+	Period 0:
+	Visited edges:[5, 6, 3, 8, 2, 0, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 6, 8, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 0, 0, 1]
+Solution 28:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 5, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 6, 8, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 0, 0, 1]
+Solution 29:
+	Period 0:
+	Visited edges:[5, 6, 0, 3, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 8, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 30:
+	Period 0:
+	Visited edges:[0, 6, 3, 5, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 8, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 31:
+	Period 0:
+	Visited edges:[5, 6, 0, 3, 4, 2, 7, 1, 8]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[8, 5, 3, 4, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 1, 3, 2, 0, 2, 3, 0, 1]
+Solution 32:
+	Period 0:
+	Visited edges:[7, 6, 5, 3, 8, 2, 0, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[8, 5, 3, 4, 0, 6, 1, 7, 2]
+	Vehicles employed:[1, 1, 3, 2, 0, 2, 3, 0, 1]
+Solution 33:
+	Period 0:
+	Visited edges:[0, 6, 3, 5, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 0, 1, 6, 8, 7, 2]
+	Vehicles employed:[1, 3, 2, 0, 2, 3, 0, 0, 1]
+Solution 34:
+	Period 0:
+	Visited edges:[5, 6, 3, 8, 2, 0, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 8, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 35:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 2, 5, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 1, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 8, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 36:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 5, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[8, 5, 3, 4, 7, 1, 6, 0, 2]
+	Vehicles employed:[1, 1, 3, 2, 0, 2, 3, 0, 1]
+Solution 37:
+	Period 0:
+	Visited edges:[0, 6, 3, 8, 2, 7, 5, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 0, 0, 1]
+	Period 1:
+	Visited edges:[4, 3, 8, 5, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 38:
+	Period 0:
+	Visited edges:[5, 0, 6, 3, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 3, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[8, 5, 3, 4, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 1, 3, 2, 0, 2, 3, 0, 1]
+Solution 39:
+	Period 0:
+	Visited edges:[5, 6, 3, 8, 2, 7, 0, 1, 4]
+	Vehicles employed:[1, 3, 0, 2, 3, 1, 0, 0, 1]
+	Period 1:
+	Visited edges:[5, 3, 4, 8, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 3, 2, 2, 0, 2, 3, 0, 1]
+Solution 40:
+	Period 0:
+	Visited edges:[5, 6, 0, 3, 8, 2, 7, 1, 4]
+	Vehicles employed:[1, 3, 0, 0, 2, 3, 1, 0, 1]
+	Period 1:
+	Visited edges:[8, 5, 3, 4, 0, 1, 6, 7, 2]
+	Vehicles employed:[1, 1, 3, 2, 0, 2, 3, 0, 1]

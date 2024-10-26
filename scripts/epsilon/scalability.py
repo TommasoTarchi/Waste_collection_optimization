@@ -5,7 +5,6 @@
 # Also a time limit (in seconds) is set to avoid "endless" computations.
 #
 
-
 import argparse
 import numpy as np
 import sys
@@ -65,15 +64,20 @@ if __name__ == "__main__":
         params = ProblemParams()
         params.load_from_dir(data_path)
 
-        print(f"Solving problem {problem_id}.")
+        print(f"Solving problem {problem_id}...", end=" ", flush=True)
 
         # set solver for problem
         solver = EpsilonSolver(params)
 
         # solve single-objective problems
         t0 = time.perf_counter()
-        solver.solve_single_objectives()
+        time_limit_exceeded = solver.solve_single_objectives(time_limit=time_limit)
         t1 = time.perf_counter()
+
+        # check if time limit was exceeded
+        if time_limit_exceeded:
+            print(f"Time limit exceeded for problem {problem_id} on single-objective optimization. Exiting.")
+            break
 
         # compute epsilon values
         t2 = time.perf_counter()
@@ -82,12 +86,12 @@ if __name__ == "__main__":
 
         # solve multi-objective problem
         t4 = time.perf_counter()
-        time_limit_exceeded = solver.solve_multi_objective(time_limit=600)
+        time_limit_exceeded = solver.solve_multi_objective(time_limit=time_limit)
         t5 = time.perf_counter()
 
         # check if time limit was exceeded
         if time_limit_exceeded:
-            print(f"Time limit exceeded for problem {problem_id}. Exiting.")
+            print(f"Time limit exceeded for problem {problem_id} on epsilon-constraint optimization. Exiting.")
             break
 
         pareto_solutions = solver.return_pareto_solutions()
@@ -159,6 +163,8 @@ if __name__ == "__main__":
 
         metrics.append([problem_id, NOS, MID, distance])
 
+        print("Done.")
+
     # write profiling and evaluation metrics to csv files
     with open(os.path.join(output_dir, "profiling.csv"), 'w', newline='') as f:
         writer = csv.writer(f)
@@ -210,5 +216,5 @@ if __name__ == "__main__":
     plt.ylabel('Distance')
     plt.title('Distance')
 
-    plt.savefig(os.path.join(output_dir, "plots", "Distance.png"))
+    plt.savefig(os.path.join(output_dir, "plots", "distance.png"))
     plt.close()

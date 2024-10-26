@@ -31,26 +31,46 @@ class EpsilonSolver:
         self.pareto_solutions = None
         self.model_status = None
 
-    def solve_single_objectives(self) -> None:
+    def solve_single_objectives(self, time_limit: Optional[float] = None ) -> bool:
         """
         Solve single-objective problems separately.
+
+        A time limit (in seconds) can be passed.
         """
+        start_time = time.perf_counter()
+
         # solve all single-objective models
         model0 = SingleObjectModel0(self.problem_params)
         model0.set_up_model()
         model0.solve()
 
+        elapsed_time = time.perf_counter() - start_time
+        if time_limit is not None and elapsed_time > time_limit:
+            return True
+
         model1 = SingleObjectModel1(self.problem_params)
         model1.set_up_model()
         model1.solve()
+
+        elapsed_time = time.perf_counter() - start_time
+        if time_limit is not None and elapsed_time > time_limit:
+            return True
 
         model2 = SingleObjectModel2(self.problem_params)
         model2.set_up_model()
         model2.solve()
 
+        elapsed_time = time.perf_counter() - start_time
+        if time_limit is not None and elapsed_time > time_limit:
+            return True
+
         model3 = SingleObjectModel3(self.problem_params)
         model3.set_up_model()
         model3.solve()
+
+        elapsed_time = time.perf_counter() - start_time
+        if time_limit is not None and elapsed_time > time_limit:
+            return True
 
         # check models' status
         if model0.return_status() == "2":
@@ -102,6 +122,8 @@ class EpsilonSolver:
 
         # save computed objectives
         self.objectives = [objectives0, objectives1, objectives2, objectives3]
+
+        return False
 
     def compute_epsilon(self, num_epsilon: int = 4) -> None:
         """
@@ -158,9 +180,9 @@ class EpsilonSolver:
             raise ValueError("Epsilon values must be computed first. Please run 'compute_epsilon' method first.")
 
         time_limit_exceeded = False
+        start_time = time.perf_counter()
 
         # solve main model for all combinations of epsilon values
-        start_time = time.perf_counter()
         pareto_solutions = []
         model_status = []
         for epsilons in self.epsilon_values:

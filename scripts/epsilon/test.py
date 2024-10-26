@@ -4,7 +4,6 @@
 # The number of epsilon values to be used can be set by the user.
 #
 
-
 import sys
 import os
 import numpy as np
@@ -62,6 +61,7 @@ if __name__ == "__main__":
     t3 = time.perf_counter()
 
     print("Epsilon values for epsilon-solver computed.")
+    print("Solving multi-objective problem...", end=" ", flush=True)
 
     # solve multi-objective problem
     t4 = time.perf_counter()
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     pareto_solutions = solver.return_pareto_solutions()
 
-    print("Multi-objective problem solved.")
+    print("Done.")
 
     # compute profiling
     time_single_obj = t1 - t0

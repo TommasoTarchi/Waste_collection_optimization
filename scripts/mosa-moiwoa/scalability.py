@@ -5,7 +5,6 @@
 # Statistics is done over a number of runs for each problem.
 #
 
-
 import argparse
 import sys
 import os
@@ -230,5 +229,5 @@ if __name__ == "__main__":
     plt.ylabel('Distance')
     plt.title("Average distance over" + str(runs_per_problem) + " runs")
 
-    plt.savefig(os.path.join(output_dir, "plots", "Distance.png"))
+    plt.savefig(os.path.join(output_dir, "plots", "distance.png"))
     plt.close()

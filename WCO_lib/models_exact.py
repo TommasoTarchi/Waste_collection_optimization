@@ -50,6 +50,10 @@ class BaseModel:
         """
         self.model = gb.Model("Epsilon-constraint")
 
+        # partially disable output
+        self.model.setParam('OutputFlag', 1)
+        self.model.setParam('LogToConsole', 0)
+
         # rename sets vars for convenience
         V = self.V
         K = self.K

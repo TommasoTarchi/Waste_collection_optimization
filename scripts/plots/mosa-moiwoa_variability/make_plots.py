@@ -42,7 +42,6 @@ if __name__ == "__main__":
                 medianprops=dict(color='red'))
 
     plt.xticks([1], ["Esecution time (s)"])
-    plt.ylabel("Values")
     plt.title("Execution time variability for MOSA-MOIWOA")
 
     plt.savefig('time_variability.png')
@@ -53,7 +52,6 @@ if __name__ == "__main__":
                 medianprops=dict(color='red'))
 
     plt.xticks([1, 2, 3], ["NOS", "MID", "Distance"])
-    plt.ylabel("Values")
     plt.title("Metrics variability for MOSA-MOIWOA")
 
     plt.savefig('metrics_variability.png')

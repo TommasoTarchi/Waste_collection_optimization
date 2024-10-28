@@ -7,8 +7,5 @@
 - Far notare (rispetto al tempo di esecuzione) che comunque gurobi è molto ottimizzato, quindi per esempio
   lavora in parallelo sulle cpu.
 - Capire bene perché la formula del quarto oggetto è fatta così.
-- Capire bene correzioni fatte a constraints.
 - Capire se si può pubblicare la repository (eventualmente scegliere licenza con molta cura).
-- Runnare MOSA-MOIWOA tipo 10 volte su dataset di problema 2 per vedere la differenza di tempo, comparare
-  anche con epsilon-constraint.
 - Ricontrollare che il sorting per crowding distance sia fatto nel senso giusto.

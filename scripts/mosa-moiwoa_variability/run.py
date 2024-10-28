@@ -40,7 +40,7 @@ if __name__ == "__main__":
         params.load_from_file(args.solver_params_file)
 
     # set data path
-    data_dir = "../datasets/scalability/2"
+    data_dir = "../datasets/2"
 
     # set output files
     output_time = "./results/time.csv"

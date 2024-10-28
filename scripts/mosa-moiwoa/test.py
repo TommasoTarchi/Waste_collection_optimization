@@ -1,12 +1,11 @@
 #
 # Run MOSA-MOIWOA on a test problem.
 #
-# The parameters to be used can be set by the user through a JSON.
+# Results written to ./results/test/results.txt.
 #
 
 import sys
 import os
-import argparse
 import time
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
@@ -20,30 +19,14 @@ from WCO_lib.evaluate import compute_MID, compute_distance
 
 if __name__ == "__main__":
 
-    # get solver parameters
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--solver_params_file",
-                        type=str,
-                        default=None,
-                        required=False)
-
-    args = parser.parse_args()
-
-    solver_params = MosaMoiwoaSolverParams()
-
-    if args.solver_params_file is None:
-        print("MOSA-MOIWOA parameters file not provided - using default parameters.")
-    else:
-        print(f"Using MOSA-MOIWOA parameters from file: {args.solver_params_file}")
-        solver_params.load_from_file(args.solver_params_file)
-
     # set output file
     output_file = "./results/test/results.txt"
 
     # set data path
-    data_dir = "../datasets/test/"
+    data_dir = "../datasets/1"
 
     # load problem parameters and build graph
+    solver_params = MosaMoiwoaSolverParams()
     problem_params = ProblemParams()
     problem_params.load_from_dir(data_dir)
     problem_params.build_graph()

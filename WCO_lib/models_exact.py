@@ -148,12 +148,24 @@ class BaseModel:
         # add constraint for first trip
         for t in range(T):
             for k in range(K):
+                outgoing_edges = gb.LinExpr([(1.0, self.x[0, j, k, 0, t]) for j in touched_vertices
+                                             if (0, j) in self.problem_params.existing_edges])
+                incoming_edges = gb.LinExpr([(1.0, self.x[j, 0, k, 0, t]) for j in touched_vertices
+                                             if (j, 0) in self.problem_params.existing_edges])
+                self.model.addConstr(outgoing_edges == incoming_edges + 1)
+
                 for i in touched_vertices_no_origins:
                     outgoing_edges = gb.LinExpr([(1.0, self.x[i, j, k, 0, t]) for j in touched_vertices
                                                  if (i, j) in self.problem_params.existing_edges])
                     incoming_edges = gb.LinExpr([(1.0, self.x[j, i, k, 0, t]) for j in touched_vertices
                                                  if (j, i) in self.problem_params.existing_edges])
                     self.model.addConstr(outgoing_edges == incoming_edges)
+
+                outgoing_edges = gb.LinExpr([(1.0, self.x[V-1, j, k, 0, t]) for j in touched_vertices
+                                             if (V-1, j) in self.problem_params.existing_edges])
+                incoming_edges = gb.LinExpr([(1.0, self.x[j, V-1, k, 0, t]) for j in touched_vertices
+                                                if (j, V-1) in self.problem_params.existing_edges])
+                self.model.addConstr(outgoing_edges + 1 == incoming_edges)
 
         # add constraints for other trips
         for t in range(T):
@@ -322,10 +334,10 @@ class BaseModel:
         for t in range(self.T):
             for p in range(self.P):
                 for k in range(self.K):
-                    self.x_best[k, p, t, :] = np.array([x_out[i, j, k, p, t] for (i, j) in self.problem_params.existing_edges])
-                    self.y_best[k, p, t, :] = np.array([y_out[i, j, k, p, t] for (i, j) in self.problem_params.required_edges[t]])
+                    self.x_best[k, p, t, :] = np.array([round(x_out[i, j, k, p, t]) for (i, j) in self.problem_params.existing_edges])
+                    self.y_best[k, p, t, :] = np.array([round(y_out[i, j, k, p, t]) for (i, j) in self.problem_params.required_edges[t]])
 
-        self.u_best = np.array([[u_out[k, t] for t in range(self.T)] for k in range(self.K)])
+        self.u_best = np.array([[round(u_out[k, t]) for t in range(self.T)] for k in range(self.K)])
         self.LT_best = np.array([[[LT_out[k, p, t] for t in range(self.T)] for p in range(self.P)] for k in range(self.K)])
         self.UT_best = np.array([[[UT_out[k, p, t] for t in range(self.T)] for p in range(self.P)] for k in range(self.K)])
         self.WT_best = np.array([[WT_out[k, t] for t in range(self.T)] for k in range(self.K)])
@@ -386,32 +398,32 @@ class BaseModel:
                 slack = constr.slack
                 print(f"Constraint {constr.ConstrName} has slack: {slack}")
 
-        for t in range(self.T):
-            for k in range(self.K):
-                constr = self.model.getConstrByName(f"constraint (14) for period {t} and vehicle {k}")
-                slack = constr.slack
-                print(f"Constraint {constr.ConstrName} has slack: {slack}")
-
-                for p in range(1, self.P-1):
-                    constr = self.model.getConstrByName(f"constraint (15) in period {t} and vehicle {k} for trip {p}")
-                    slack = constr.slack
-                    print(f"Constraint {constr.ConstrName} has slack: {slack}")
-
-                constr = self.model.getConstrByName(f"constraint (16) for period {t} and vehicle {k}")
-                slack = constr.slack
-                print(f"Constraint {constr.ConstrName} has slack: {slack}")
-
-                constr = self.model.getConstrByName(f"constraint (17) for period {t} and vehicle {k}")
-                slack = constr.slack
-                print(f"Constraint {constr.ConstrName} has slack: {slack}")
-
-                constr = self.model.getConstrByName(f"constraint (18) for period {t}, trip {p} and vehicle {k}")
-                slack = constr.slack
-                print(f"Constraint {constr.ConstrName} has slack: {slack}")
-
-                constr = self.model.getConstrByName(f"constraint (19) for period {t}, trip {p} and vehicle {k}")
-                slack = constr.slack
-                print(f"Constraint {constr.ConstrName} has slack: {slack}")
+        #for t in range(self.T):
+        #    for k in range(self.K):
+        #        constr = self.model.getConstrByName(f"constraint (14) for period {t} and vehicle {k}")
+        #        slack = constr.slack
+        #        print(f"Constraint {constr.ConstrName} has slack: {slack}")
+#
+#                for p in range(1, self.P-1):
+#                    constr = self.model.getConstrByName(f"constraint (15) in period {t} and vehicle {k} for trip {p}")
+#                    slack = constr.slack
+#                    print(f"Constraint {constr.ConstrName} has slack: {slack}")
+#
+#                constr = self.model.getConstrByName(f"constraint (16) for period {t} and vehicle {k}")
+#                slack = constr.slack
+#                print(f"Constraint {constr.ConstrName} has slack: {slack}")
+#
+#                constr = self.model.getConstrByName(f"constraint (17) for period {t} and vehicle {k}")
+#                slack = constr.slack
+#                print(f"Constraint {constr.ConstrName} has slack: {slack}")
+#
+#                constr = self.model.getConstrByName(f"constraint (18) for period {t}, trip {p} and vehicle {k}")
+#                slack = constr.slack
+#                print(f"Constraint {constr.ConstrName} has slack: {slack}")
+#
+#                constr = self.model.getConstrByName(f"constraint (19) for period {t}, trip {p} and vehicle {k}")
+#                slack = constr.slack
+#                print(f"Constraint {constr.ConstrName} has slack: {slack}")
 
 
 class SingleObjectModel0(BaseModel):

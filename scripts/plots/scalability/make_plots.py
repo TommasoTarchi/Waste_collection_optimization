@@ -21,7 +21,7 @@ if __name__ == '__main__':
     rows = data_mm[1:]
     time_totals_mm = [float(row[4]) for row in rows]
 
-    time_avgs_mm = [sum(time_totals_mm[i:i + 5]) / 5 for i in range(0, len(time_totals_mm), 5)]
+    time_avgs_mm = [sum(time_totals_mm[i:i + 8]) / 8 for i in range(0, len(time_totals_mm), 8)]
 
     # plot
     plt.plot(problem_ids, time_totals_ec, label='epsilon-constraint', color='blue', marker='o')

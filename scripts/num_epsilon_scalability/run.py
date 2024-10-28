@@ -19,10 +19,10 @@ from WCO_lib.evaluate import compute_MID, compute_distance
 if __name__ == "__main__":
 
     # set epsilon values for epsilon-constraint solver
-    num_epsilon_list = [5, 6, 7, 8, 9, 10, 11, 12]
+    num_epsilon_list = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
     # set data path
-    data_dir = "../datasets/scalability/2"
+    data_dir = "../datasets/2"
 
     # set output files
     output_file = "./results/results.csv"

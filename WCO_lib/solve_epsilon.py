@@ -209,15 +209,10 @@ class EpsilonSolver:
 
             add = True
             for solution_unique in pareto_solutions_unique:
-                if (np.all(solution["x"] == solution_unique["x"])
-                    and np.all(solution["y"] == solution_unique["y"])
-                    and np.all(solution["u"] == solution_unique["u"])
-                    and np.all(np.abs(solution["LT"] - solution_unique["LT"] < 1e-6))
-                    and np.all(np.abs(solution["UT"] - solution_unique["UT"] < 1e-6))
-                    and np.all(np.abs(solution["WT"] - solution_unique["WT"] < 1e-6))):
-
+                if np.all(solution["x"] == solution_unique["x"]) and np.all(solution["y"] == solution_unique["y"]):
                     add = False
                     break
+
             if add:
                 pareto_solutions_unique.append(solution)
 

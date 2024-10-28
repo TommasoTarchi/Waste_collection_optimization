@@ -29,7 +29,7 @@ if __name__ == "__main__":
     bounds_G = (1, 3)
 
     # set number of epsilon values for epsilon-solver
-    num_epsilon = 12
+    num_epsilon = 10
 
     # generate dataset
     generate_dataset(data_dir, bounds_c, bounds_d, bounds_t, bounds_cv, bounds_G)
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # solve multi-objective problem
     time_start = time.perf_counter()
-    time_exceeded = solver.solve_multi_objective(time_limit=100)
+    time_exceeded = solver.solve_multi_objective(time_limit=300)
     print("Time elapsed: " + str(time.perf_counter() - time_start) + " seconds.\n")
 
     if time_exceeded:

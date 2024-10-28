@@ -1,13 +1,12 @@
 #
 # Run epsilon-constraint algorithm on a test problem.
 #
-# The number of epsilon values to be used can be set by the user.
+# Results are written to ./results/test/results.txt.
 #
 
 import sys
 import os
 import numpy as np
-import argparse
 import time
 
 library_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
@@ -21,13 +20,8 @@ from WCO_lib.evaluate import compute_MID, compute_distance
 
 if __name__ == "__main__":
 
-    # get number of epsilon values
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num_epsilon", type=int, default=5)
-
-    args = parser.parse_args()
-
-    num_epsilon = args.num_epsilon
+    # set number of epsilon values
+    num_epsilon = 10
 
     print(f"Using epsilon-solver with number of epsilon values = {num_epsilon}.")
 
@@ -35,7 +29,7 @@ if __name__ == "__main__":
     output_file = "./results/test/results.txt"
 
     # set data path
-    data_dir = "../datasets/test/"
+    data_dir = "../datasets/1"
 
     # load problem parameters
     params = ProblemParams()
@@ -116,8 +110,6 @@ if __name__ == "__main__":
             for t in range(params.num_periods):
                 f.write("\tNumber of employed vehicles in period " + str(t) + ": "
                         + str(np.sum(solution["u"][:, t] > 0)) + "\n")
-                f.write("\tTotal number of traversings in period " + str(t) + ": "
-                        + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
                 f.write("\tTotal number of served edges in period " + str(t) + ": "
                         + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
                 for k in range(params.num_vehicles):

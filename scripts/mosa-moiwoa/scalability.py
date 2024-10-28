@@ -1,6 +1,8 @@
 #
 # Run scalability study for MOSA-MOIWOA.
 #
+# Results are saved in ./results/scalability.
+#
 # The parameters to be used can be set by the user through a JSON.
 # Statistics is done over a number of runs for each problem.
 #
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     runs_per_problem = args.runs_per_problem
 
     # set data directories
-    data_dir = "../datasets/scalability"
+    data_dir = "../datasets"
     output_dir = "./results/scalability"
 
     # get all files in the directory
@@ -113,50 +115,6 @@ if __name__ == "__main__":
             time_MOSA = t3 - t2
             time_MOIWOA = t5 - t4
             total_time = time_initial_heuristic + time_MOSA + time_MOIWOA
-
-            # save pareto solutions
-            output_solution_file = os.path.join(output_dir, problem_id + "_solutions_run" + str(run_id) + ".txt")
-
-            with open(output_solution_file, "w") as f:
-                f.write("PROBLEM PARAMETERS:\n")
-                f.write("Number of nodes: " + str(problem_params.num_nodes) + "\n")
-                f.write("Number of edges: " + str(problem_params.num_edges) + "\n")
-                f.write("Number of required edges: " + str(problem_params.num_required_edges) + "\n")
-                f.write("Number of periods: " + str(problem_params.num_periods) + "\n")
-                f.write("Number of vehicles: " + str(problem_params.num_vehicles) + "\n")
-                f.write("W: " + str(problem_params.W) + "\n")
-                f.write("T_max: " + str(problem_params.T_max) + "\n")
-                f.write("M: " + str(problem_params.M) + "\n")
-                f.write("theta: " + str(problem_params.theta) + "\n")
-                f.write("sigma: " + str(problem_params.sigma) + "\n")
-                f.write("ul: " + str(problem_params.ul) + "\n")
-                f.write("uu: " + str(problem_params.uu) + "\n")
-
-                f.write("\nNUMBER OF ITERATIONS FOR STATISTICS: " + str(runs_per_problem) + "\n")
-
-                f.write("\nPROFILING:\n")
-                f.write("Time for initial solutions generation: " + str(time_initial_heuristic) + " seconds\n")
-                f.write("Time for MOSA: " + str(time_MOSA) + " seconds\n")
-                f.write("Time for MOIWOA: " + str(time_MOIWOA) + " seconds\n")
-                f.write("Total time for resolution: " + str(time_initial_heuristic + time_MOSA + time_MOIWOA) + " seconds\n")
-
-                f.write("\nEDGES LIST: " + str(problem_params.existing_edges) + "\n")
-                f.write("REQUIRED EDGES LIST: " + str(problem_params.required_edges) + "\n")
-
-                f.write("\nEVALUATION METRICS:\n")
-                f.write("Number of Pareto solutions: " + str(len(pareto_solutions)) + "\n")
-                f.write("MID for Pareto solutions: " + str(compute_MID(problem_params, objectives=objective_values)) + "\n")
-                f.write("Distance for Pareto solutions: " + str(compute_distance(problem_params, objectives=objective_values)) + "\n")
-
-                f.write("\nPARETO SOLUTIONS:\n")
-                solution_count = 0
-                for solution in pareto_solutions:
-                    f.write("Solution " + str(solution_count) + ":\n")
-                    for period in range(problem_params.num_periods):
-                        f.write(f"\tPeriod {period}:\n")
-                        f.write("\tVisited edges:" + str(solution[period]["first_part"]) + "\n")
-                        f.write("\tVehicles employed:" + str(solution[period]["second_part"]) + "\n")
-                    solution_count += 1
 
             # save profiling and evaluation metrics
             profiling.append([problem_id, time_initial_heuristic, time_MOSA, time_MOIWOA, total_time])

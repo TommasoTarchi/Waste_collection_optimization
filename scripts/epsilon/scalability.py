@@ -1,12 +1,13 @@
 #
 # Run scalability study for epsilon-constraint algorithm.
 #
+# Results saved in ./results/scalability.
+#
 # The number of epsilon values to be used can be set by the user.
 # Also a time limit (in seconds) is set to avoid "endless" computations.
 #
 
 import argparse
-import numpy as np
 import sys
 import os
 import csv
@@ -26,8 +27,8 @@ if __name__ == "__main__":
 
     # get number of epsilon values
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num_epsilon", type=int, default=5)
-    parser.add_argument("--time_limit", type=float, default=600.)
+    parser.add_argument("--num_epsilon", type=int, default=10)
+    parser.add_argument("--time_limit", type=float, default=1200.)
 
     args = parser.parse_args()
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     print(f"Time limit for computation is set to {time_limit} seconds.")
 
     # set data directories
-    data_dir = "../datasets/scalability"
+    data_dir = "../datasets"
     output_dir = "./results/scalability"
 
     # get all files in the directory
@@ -106,57 +107,6 @@ if __name__ == "__main__":
         time_comp_epsilon = t3 - t2
         time_multi_obj = t5 - t4
         total_time = time_multi_obj + time_single_obj + time_comp_epsilon
-
-        # save pareto solutions
-        output_solution_file = os.path.join(output_dir, problem_id + "_solutions.txt")
-
-        with open(output_solution_file, "w") as f:
-            f.write("PROBLEM PARAMETERS:\n")
-            f.write("Number of nodes: " + str(params.num_nodes) + "\n")
-            f.write("Number of edges: " + str(params.num_edges) + "\n")
-            f.write("Number of required edges: " + str(params.num_required_edges) + "\n")
-            f.write("Number of periods: " + str(params.num_periods) + "\n")
-            f.write("Number of vehicles: " + str(params.num_vehicles) + "\n")
-            f.write("W: " + str(params.W) + "\n")
-            f.write("T_max: " + str(params.T_max) + "\n")
-            f.write("M: " + str(params.M) + "\n")
-            f.write("theta: " + str(params.theta) + "\n")
-            f.write("sigma: " + str(params.sigma) + "\n")
-            f.write("ul: " + str(params.ul) + "\n")
-            f.write("uu: " + str(params.uu) + "\n")
-
-            f.write("\nPROFILING:\n")
-            f.write("Time for single-objective problems resolution: " + str(time_single_obj) + " seconds\n")
-            f.write("Time for epsilon values computation: " + str(time_comp_epsilon) + " seconds\n")
-            f.write("Time for final model resolution: " + str(time_multi_obj) + " seconds\n")
-            f.write("Total time for rsolution: " + str(total_time) + " seconds\n")
-
-            f.write("\nEVALUATION METRICS:\n")
-            f.write("Number of Pareto solutions: " + str(NOS) + "\n")
-            f.write("MID for Pareto solutions: " + str(MID) + "\n")
-            f.write("Distance for Pareto solutions: " + str(distance) + "\n\n")
-
-            f.write("\nEDGES LIST: " + str(params.existing_edges) + "\n")
-            f.write("REQUIRED EDGES LIST: " + str(params.required_edges) + "\n")
-
-            f.write("\nPARETO SOLUTIONS SUMMARY:\n")
-            solution_count = 0
-            for solution in pareto_solutions:
-                f.write("Solution " + str(solution_count) + ":\n")
-                for t in range(params.num_periods):
-                    f.write("\tNumber of employed vehicles in period " + str(t) + ": "
-                            + str(np.sum(solution["u"][:, t] > 0)) + "\n")
-                    f.write("\tTotal number of traversings in period " + str(t) + ": "
-                            + str(np.sum(solution["x"][:, :, t, :] > 0)) + "\n")
-                    f.write("\tTotal number of served edges in period " + str(t) + ": "
-                            + str(np.sum(solution["y"][:, :, t, :] > 0)) + "\n")
-                    for k in range(params.num_vehicles):
-                        f.write("\tVehicle " + str(k) + ":\n")
-                        for p in range(params.num_required_edges):
-                            f.write("\t\tTrip " + str(p) + ":\n")
-                            f.write("\t\tx: " + str(solution["x"][k, p, t, :]) + "\n")
-                            f.write("\t\ty: " + str(solution["y"][k, p, t, :]) + "\n")
-                solution_count += 1
 
         # save profiling and evaluation metrics
         profiling.append([problem_id, time_single_obj, time_comp_epsilon, time_multi_obj, total_time])

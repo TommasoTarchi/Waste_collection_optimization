@@ -8,3 +8,6 @@
 **/model.ilp
 **/results.txt
 !scripts/**/results.txt
+
+# zipped directories
+**/*.zip

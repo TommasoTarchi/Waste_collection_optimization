@@ -226,3 +226,5 @@ have a feasible but not trivial solution (if you are interested in the way this 
 
 - Amine, Khalil, Multiobjective Simulated Annealing: Principles and Algorithm Variants, Advances in Operations
   Research, 2019, 8134674, 13 pages, 2019. [https://doi.org/10.1155/2019/8134674](https://doi.org/10.1155/2019/8134674).
+
+- Gurobi Optimizer, developed by Gurobi Optimization, LLC. [https://www.gurobi.com](https://www.gurobi.com).
